@@ -161,6 +161,7 @@ $dropdown-link-hover-border: 1px solid #bee1f4;
     align-items: center;
     display: flex;
     justify-content: space-between;
+    flex-wrap: wrap;
 
     .btn-link {
       color: inherit;
@@ -180,7 +181,7 @@ $dropdown-link-hover-border: 1px solid #bee1f4;
 }
 
 .co-namespace-selector {
-  max-width: 60%;
+  max-width: 100%;
 
   .btn-link {
     font-size: ($font-size-base + 1);
