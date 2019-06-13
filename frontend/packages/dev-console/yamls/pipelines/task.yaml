@@ -1,0 +1,156 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: echo-hello-world
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: echo-hello-world-2
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: mvn-build
+spec:
+  inputs:
+    resources:
+    - name: workspace-git
+      targetPath: /
+      type: git
+  outputs:
+    resources:
+    - name: workspace-git
+      type: git
+  steps:
+  - name: build
+    image: maven:3.6.0-jdk-8-slim
+    command:
+    - /usr/bin/mvn
+    args:
+    - verify
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: buildah
+spec:
+  inputs:
+    resources:
+    - name: workspace-git
+      targetPath: /
+      type: git
+    params:
+    - name: dockerfile
+      description: The path to the dockerfile to build
+      default: ./Dockerfile
+    - name: verifyTLS
+      description: Verify registry certificates
+      default: "true"
+  outputs:
+    resources:
+    - name: image
+      type: image
+  steps:
+  - name: build
+    image: quay.io/openshift-pipeline/buildah:testing
+    command:
+      - buildah
+    args: 
+      - bud
+      - --layers
+      - --tls-verify=${inputs.params.verifyTLS}
+      - -f
+      - ${inputs.params.dockerfile}
+      - -t
+      - ${outputs.resources.image.url}
+      - .
+    volumeMounts:
+    - name: libcontainers
+      mountPath: /var/lib/containers
+    securityContext:
+      privileged: true
+  - name: push
+    image: quay.io/openshift-pipeline/buildah:testing
+    command:
+      - buildah
+    args: 
+      - push
+      - --tls-verify=${inputs.params.verifyTLS}
+      - ${outputs.resources.image.url}
+    volumeMounts:
+    - name: libcontainers
+      mountPath: /var/lib/containers
+    securityContext:
+      privileged: true
+  volumes:
+    - name: libcontainers
+      emptyDir: {}
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: mvn-test
+spec:
+  inputs:
+    resources:
+    - name: workspace-git
+      targetPath: /
+      type: git
+  steps:
+  - name: build
+    image: maven:3.6.0-jdk-8-slim
+    command:
+    - /usr/bin/mvn
+    args:
+    - package
+    - -DskipTests
+  - name: test
+    image: maven:3.6.0-jdk-8-slim
+    command:
+    - /usr/bin/mvn
+    args:
+    - verify
+---
+
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: openshift-cli
+spec:
+  inputs:
+    params:
+    - name: command
+      description: The OpenShift CLI commands to run
+  steps:
+  - name: oc
+    image: quay.io/openshift-pipeline/openshift-cli
+    command: ["/usr/local/bin/oc"]
+    args:
+    - "${inputs.params.command}"
+---
+
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: static-analysis
+spec:
+  inputs:
+    resources:
+    - name: workspace-git
+      targetPath: /
+      type: git
+  steps:
+    - name: pmd
+      image: ubuntu
+      command:
+        - echo
+      args:
+        - "pmd"
+    - name: sonar
+      image: ubuntu
+      command:
+        - echo
+      args:
+        - "sonar"
+

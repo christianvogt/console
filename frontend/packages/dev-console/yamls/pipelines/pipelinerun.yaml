@@ -1,0 +1,12 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  name: simple-pipeline-1
+  labels: 
+    "tekton.dev/pipeline": simple-pipeline
+spec:
+  pipelineRef:
+    name: simple-pipeline
+  trigger:
+      type: manual
+---
