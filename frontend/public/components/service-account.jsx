@@ -12,6 +12,7 @@ import { SecretModel } from '../models';
 import { SecretsPage } from './secret';
 import { saveAs } from 'file-saver';
 import { errorModal } from './modals';
+import { getClusterName } from './utils/cluster-name';
 
 const KubeConfigify = (kind, sa) => ({
   label: 'Download kubeconfig file',
@@ -22,8 +23,7 @@ const KubeConfigify = (kind, sa) => ({
 
     k8sList(SecretModel, {ns: namespace}).then((secrets) => {
       const server = window.SERVER_FLAGS.kubeAPIServerURL;
-      const url = new URL(server);
-      const clusterName = url.host.replace(/\./g, '-');
+      const clusterName = getClusterName(server);
 
       // Find the secret that is the service account token.
       const saSecretsByName = _.keyBy(sa.secrets, 'name');
