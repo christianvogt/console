@@ -3,7 +3,7 @@ import { RouteProps, RouteComponentProps } from 'react-router';
 import { K8sKind, K8sResourceKindReference } from '@console/internal/module/k8s';
 import { Extension } from './extension';
 
-type LazyLoader<T> = () => Promise<React.ComponentType<T>>;
+type LazyLoader<T extends {}> = () => Promise<React.ComponentType<Partial<T>>>;
 
 namespace ExtensionProperties {
   export interface ResourcePage<T> {
@@ -15,26 +15,26 @@ namespace ExtensionProperties {
 
   export type ResourceListPage = ResourcePage<{
     /** See https://reacttraining.com/react-router/web/api/match */
-    match?: RouteComponentProps['match'];
+    match: RouteComponentProps['match'];
     /** The resource kind scope. */
-    kind?: K8sResourceKindReference;
+    kind: K8sResourceKindReference;
     /** Whether the page should assign focus when loaded. */
     autoFocus?: boolean;
     /** Whether the page should mock the UI empty state. */
     mock?: boolean;
     /** The namespace scope. */
-    namespace?: string;
+    namespace: string;
   }>;
 
   export type ResourceDetailsPage = ResourcePage<{
     /** See https://reacttraining.com/react-router/web/api/match */
-    match?: RouteComponentProps['match'];
+    match: RouteComponentProps['match'];
     /** The resource kind scope. */
-    kind?: K8sResourceKindReference;
+    kind: K8sResourceKindReference;
     /** The namespace scope. */
-    namespace?: string;
+    namespace: string;
     /** The page name. */
-    name?: string;
+    name: string;
   }>;
 
   // Maps to react-router#https://reacttraining.com/react-router/web/api/Route
