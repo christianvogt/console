@@ -8,6 +8,7 @@ export interface DeploymentConfigSectionProps {
 
 const DeploymentConfigSection: React.FC<DeploymentConfigSectionProps> = ({ namespace }) => {
   const deploymentConfigObj = {
+    kind: 'DeploymentConfig',
     metadata: {
       namespace,
     },

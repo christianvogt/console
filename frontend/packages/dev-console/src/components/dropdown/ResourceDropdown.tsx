@@ -140,6 +140,13 @@ class ResourceDropdown extends React.Component<ResourceDropdownProps, State> {
   };
 
   render() {
+    const items = {};
+
+    _.keys(this.state.items).forEach((key) => {
+      const item = this.state.items[key];
+      items[key] = item.name;
+    });
+
     return (
       <Dropdown
         className={this.props.className}
@@ -149,7 +156,7 @@ class ResourceDropdown extends React.Component<ResourceDropdownProps, State> {
         titlePrefix={this.props.titlePrefix}
         autocompleteFilter={fuzzy}
         actionItem={this.props.actionItem}
-        items={this.state.items}
+        items={items}
         onChange={this.onChange}
         selectedKey={this.props.selectedKey}
         title={this.props.title || this.state.title}

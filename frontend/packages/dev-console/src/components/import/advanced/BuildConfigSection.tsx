@@ -8,6 +8,7 @@ export interface BuildConfigSectionProps {
 
 const BuildConfigSection: React.FC<BuildConfigSectionProps> = ({ namespace }) => {
   const buildConfigObj = {
+    kind: 'BuildConfig',
     metadata: {
       namespace,
     },

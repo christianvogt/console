@@ -80,30 +80,6 @@ const plugin: Plugin<ConsumedExtensions> = [
     },
   },
   {
-    type: 'NavItem/Href',
-    properties: {
-      perspective: 'dev',
-      section: 'Advanced',
-      componentProps: {
-        name: 'Status',
-        href: '/overview',
-        required: FLAGS.OPENSHIFT,
-      },
-    },
-  },
-  {
-    type: 'NavItem/Href',
-    properties: {
-      perspective: 'dev',
-      section: 'Advanced',
-      componentProps: {
-        name: 'Status',
-        href: '/status',
-        disallowed: FLAGS.OPENSHIFT,
-      },
-    },
-  },
-  {
     type: 'NavItem/ResourceNS',
     properties: {
       perspective: 'dev',
