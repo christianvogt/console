@@ -7,6 +7,7 @@ export type PointTuple = [number, number];
 
 export interface Layout {
   type: string;
+  layout: (entities: ElementEntity[]) => void;
 }
 
 export interface LayoutConstraint {
@@ -150,6 +151,8 @@ export interface Controller extends WithState {
   fromModel(model: Model): void;
   getGraph(): GraphEntity;
   setGraph(Graph: GraphEntity): void;
+  getLayout(): Layout;
+  setLayout(layout: Layout): void;
   getEntityById(id: string): ElementEntity;
   // TODO | undefined ?
   getNodeById(id: string): NodeEntity;
@@ -173,3 +176,5 @@ export type WidgetFactory = (
 export type InteractionHandlerFactory = (entity: ElementEntity) => InteractionHandler[] | undefined;
 
 export type EntityFactory = (kind: ModelKind, type: string) => ElementEntity | undefined;
+
+export type LayoutFactory = (kind: string) => Layout | undefined;

@@ -1,15 +1,13 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { Edge, Model, ModelKind, Node } from '../src/types';
+import { Edge, Layout, Model, ModelKind, Node } from '../src/types';
 import Visualization from '../src/Visualization';
 import { withPanZoom } from '../src/behavior/usePanZoom';
 import GraphWidget from '../src/widgets/GraphWidget';
 import { withDragGroup } from '../src/behavior/useDragGroup';
 import { withDragNode } from '../src/behavior/useDragNode';
 import VisualizationWidget from '../src/VisualizationWidget';
-import { ColaLayout } from './layouts/colaLayout';
-import { DagreLayout } from './layouts/dagreLayout';
-import { ForceLayout } from './layouts/forceLayout';
+import { defaultLayoutFactory, layoutKinds } from '../src/layouts/defaultLayoutFactory';
 import data from './data/miserables';
 import defaultWidgetFactory from './widgets/defaultWidgetFactory';
 import GroupHullWidget from './widgets/GroupHullWidget';
@@ -70,7 +68,7 @@ const getModel = (): Model => {
   return model;
 };
 
-const getVisualization = (model: Model): Visualization => {
+const getVisualization = (model: Model, layout: Layout | undefined): Visualization => {
   const vis = new Visualization();
 
   vis.registerWidgetFactory(defaultWidgetFactory);
@@ -93,23 +91,24 @@ const getVisualization = (model: Model): Visualization => {
   });
   vis.fromModel(model);
 
+  if (layout) {
+    vis.setLayout(layout);
+  }
+
   return vis;
 };
 
 export const Force = () => {
-  const vis: Visualization = getVisualization(getModel());
-  ForceLayout(vis);
+  const vis: Visualization = getVisualization(getModel(), defaultLayoutFactory(layoutKinds.force));
   return <VisualizationWidget visualization={vis} />;
 };
 
 export const Dagre = () => {
-  const vis: Visualization = getVisualization(getModel());
-  DagreLayout(vis);
+  const vis: Visualization = getVisualization(getModel(), defaultLayoutFactory(layoutKinds.dagre));
   return <VisualizationWidget visualization={vis} />;
 };
 
 export const Cola = () => {
-  const vis: Visualization = getVisualization(getModel());
-  ColaLayout(vis);
+  const vis: Visualization = getVisualization(getModel(), defaultLayoutFactory(layoutKinds.cola));
   return <VisualizationWidget visualization={vis} />;
 };

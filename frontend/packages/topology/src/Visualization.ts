@@ -9,6 +9,7 @@ import {
   InteractionHandlerFactory,
   EventListener,
   ElementEntity,
+  Layout,
 } from './types';
 import VisualizationController from './VisualizationController';
 
@@ -50,6 +51,14 @@ export default class Visualization {
 
   registerInteractionHandlerFactory(factory: InteractionHandlerFactory): void {
     this.controller.registerInteractionHandlerFactory(factory);
+  }
+
+  getLayout(): Layout {
+    return this.controller.getLayout();
+  }
+
+  setLayout(layout: Layout): void {
+    this.controller.setLayout(layout);
   }
 
   addEventListener<L extends EventListener = EventListener>(type: string, listener: L): void {

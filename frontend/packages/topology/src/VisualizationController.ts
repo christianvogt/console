@@ -16,6 +16,7 @@ import {
   InteractionHandlerFactory,
   EventListener,
   ModelKind,
+  Layout,
 } from './types';
 import defaultEntityFactory from './entities/defaultEntityFactory';
 import Stateful from './utils/Stateful';
@@ -26,6 +27,9 @@ export default class VisualizationController extends Stateful implements Control
 
   @observable.ref
   private graph: GraphEntity | undefined;
+
+  @observable.ref
+  private layout: Layout | undefined;
 
   private widgetFactories: WidgetFactory[] = [];
 
@@ -68,6 +72,10 @@ export default class VisualizationController extends Stateful implements Control
       }
     });
 
+    if (this.layout) {
+      this.layout.layout(this.getEntities());
+    }
+
     // TODO where to activate the graph?
     if (this.graph) {
       this.graph.activate();
@@ -87,6 +95,18 @@ export default class VisualizationController extends Stateful implements Control
     }
     this.graph = graph;
     graph.setController(this);
+  }
+
+  getLayout(): Layout {
+    if (!this.layout) {
+      throw new Error('Graph has not been set.');
+    }
+    return this.layout;
+  }
+
+  setLayout(layout: Layout): void {
+    this.layout = layout;
+    layout.layout(this.getEntities());
   }
 
   getEntities(): ElementEntity[] {
