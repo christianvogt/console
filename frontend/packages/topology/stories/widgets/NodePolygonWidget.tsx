@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as _ from 'lodash';
 import { NodeEntity } from '../../src/types';
 import widget from '../../src/widget';
 import { useSvgAnchor } from '../../src/behavior/useSvgAnchor';
@@ -8,8 +9,9 @@ import { WithDndDragProps } from '../../src/behavior/useDndDrag';
 import { WithDndDropProps } from '../../src/behavior/useDndDrop';
 import SVGAnchor from '../../src/anchors/SVGAnchor';
 import { combineRefs } from '../../src/utils/combineRefs';
+import Point from '../../src/geom/Point';
 
-type NodeWidgetProps = {
+type NodePolygonWidgetProps = {
   entity: NodeEntity;
   droppable?: boolean;
   hover?: boolean;
@@ -19,7 +21,7 @@ type NodeWidgetProps = {
   WithDndDragProps &
   WithDndDropProps;
 
-const NodeWidget: React.FC<NodeWidgetProps> = ({
+const NodePolygonWidget: React.FC<NodePolygonWidgetProps> = ({
   entity,
   selected,
   onSelect,
@@ -35,14 +37,27 @@ const NodeWidget: React.FC<NodeWidgetProps> = ({
   );
   const { width, height } = entity.getBounds();
 
+  const points: Point[] = [
+    new Point(width / 2, 0),
+    new Point(width - width / 8, height),
+    new Point(0, height / 3),
+    new Point(width, height / 3),
+    new Point(width / 8, height),
+  ];
+
+  const p: string = _.reduce(
+    points,
+    (result: string, nextPoint: Point) => {
+      return `${result}${nextPoint.x},${nextPoint.y} `;
+    },
+    '',
+  );
+
   return (
-    <ellipse
+    <polygon
       ref={combineRefs([dragNodeRef, dndDragRef, dndDropRef, anchorRef])}
       onClick={onSelect}
-      cx={width / 2}
-      cy={height / 2}
-      rx={Math.max(0, width / 2 - 1)}
-      ry={Math.max(0, height / 2 - 1)}
+      points={p}
       fill={
         canDrop && hover
           ? 'lightgreen'
@@ -58,4 +73,4 @@ const NodeWidget: React.FC<NodeWidgetProps> = ({
   );
 };
 
-export default widget(NodeWidget);
+export default widget(NodePolygonWidget);

@@ -9,7 +9,7 @@ import { WithDndDropProps } from '../../src/behavior/useDndDrop';
 import SVGAnchor from '../../src/anchors/SVGAnchor';
 import { combineRefs } from '../../src/utils/combineRefs';
 
-type NodeWidgetProps = {
+type NodeRectWidgetProps = {
   entity: NodeEntity;
   droppable?: boolean;
   hover?: boolean;
@@ -19,7 +19,7 @@ type NodeWidgetProps = {
   WithDndDragProps &
   WithDndDropProps;
 
-const NodeWidget: React.FC<NodeWidgetProps> = ({
+const NodeRectWidget: React.FC<NodeRectWidgetProps> = ({
   entity,
   selected,
   onSelect,
@@ -36,13 +36,13 @@ const NodeWidget: React.FC<NodeWidgetProps> = ({
   const { width, height } = entity.getBounds();
 
   return (
-    <ellipse
+    <rect
       ref={combineRefs([dragNodeRef, dndDragRef, dndDropRef, anchorRef])}
       onClick={onSelect}
-      cx={width / 2}
-      cy={height / 2}
-      rx={Math.max(0, width / 2 - 1)}
-      ry={Math.max(0, height / 2 - 1)}
+      x={0}
+      y={0}
+      width={Math.max(0, width)}
+      height={Math.max(0, height)}
       fill={
         canDrop && hover
           ? 'lightgreen'
@@ -58,4 +58,4 @@ const NodeWidget: React.FC<NodeWidgetProps> = ({
   );
 };
 
-export default widget(NodeWidget);
+export default widget(NodeRectWidget);
