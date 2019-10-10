@@ -7,6 +7,7 @@ import {
   ModelKind,
   isNodeEntity,
   isEdgeEntity,
+  Layout,
 } from '../types';
 import BaseElementEntity from './BaseElementEntity';
 
@@ -15,6 +16,16 @@ export default class BaseGraphEntity<E extends Graph = Graph, D = any>
   implements GraphEntity<E, D> {
   @observable
   private scale: number = 1;
+
+  @observable
+  private layoutType: string | undefined = '';
+
+  @computed
+  private get graphLayout(): Layout | undefined {
+    return this.getGraph()
+      .getController()
+      .getLayout(this.layoutType);
+  }
 
   @computed
   private get edges(): EdgeEntity[] {
@@ -38,6 +49,20 @@ export default class BaseGraphEntity<E extends Graph = Graph, D = any>
     return this.edges;
   }
 
+  getLayout(): string | undefined {
+    return this.layoutType;
+  }
+
+  setLayout(layout: string): void {
+    this.layoutType = layout;
+  }
+
+  layout(): void {
+    if (this.graphLayout) {
+      this.graphLayout.layout(this.nodes, this.edges);
+    }
+  }
+
   getScale(): number {
     return this.scale;
   }
@@ -48,6 +73,10 @@ export default class BaseGraphEntity<E extends Graph = Graph, D = any>
 
   setModel(model: E): void {
     super.setModel(model);
+
+    if ('layout' in model) {
+      this.layoutType = model.layout;
+    }
     if ('scale' in model && typeof model.scale === 'number') {
       this.scale = +model.scale;
     }
