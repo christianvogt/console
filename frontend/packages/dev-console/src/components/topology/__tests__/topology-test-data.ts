@@ -8,8 +8,8 @@ export const resources: TopologyDataResources = {
   services: { data: [] },
   routes: { data: [] },
   deployments: { data: [] },
-  replicasets: { data: [] },
-  buildconfigs: { data: [] },
+  replicaSets: { data: [] },
+  buildConfigs: { data: [] },
   builds: { data: [] },
   daemonSets: { data: [] },
   statefulSets: { data: [] },
@@ -42,6 +42,9 @@ export const sampleDeploymentConfigs: Resource = {
         },
       },
       spec: {
+        strategy: {
+          type: 'Rolling',
+        },
         template: {
           metadata: {
             creationTimestamp: null,
@@ -199,7 +202,7 @@ export const samplePods: Resource = {
         resourceVersion: '1395096',
         name: 'analytics-deployment-59dd7c47d4-2jp7t',
         uid: '5cec460e-680d-11e9-8c69-5254003f9382',
-        creationTimestaResourcePropsmp: '2019-04-26T10:23:41Z',
+        creationTimestamp: '2019-04-26T10:23:41Z',
         namespace: 'testproject3',
         ownerReferences: [
           {
@@ -892,7 +895,7 @@ export const sampleRoutes: Resource = {
   ],
 };
 
-const sampleBuildConfigs: Resource = {
+export const sampleBuildConfigs: Resource = {
   data: [
     {
       kind: 'BuildConfig',
@@ -972,7 +975,7 @@ const sampleBuildConfigs: Resource = {
   ],
 };
 
-const sampleBuilds: Resource = {
+export const sampleBuilds: Resource = {
   data: [
     {
       kind: 'Builds',
@@ -1068,7 +1071,7 @@ const sampleBuilds: Resource = {
   ],
 };
 
-const sampleDaemonSets = {
+export const sampleDaemonSets = {
   data: [
     {
       metadata: {
@@ -1143,7 +1146,7 @@ const sampleDaemonSets = {
   ],
 };
 
-const sampleStatefulSets: Resource = {
+export const sampleStatefulSets: Resource = {
   data: [
     {
       metadata: {
@@ -1288,11 +1291,11 @@ export const MockResources: TopologyDataResources = {
   deployments: sampleDeployments,
   deploymentConfigs: sampleDeploymentConfigs,
   replicationControllers: sampleReplicationControllers,
-  replicasets: sampleReplicaSets,
+  replicaSets: sampleReplicaSets,
   pods: samplePods,
   services: sampleServices,
   routes: sampleRoutes,
-  buildconfigs: sampleBuildConfigs,
+  buildConfigs: sampleBuildConfigs,
   builds: sampleBuilds,
   daemonSets: sampleDaemonSets,
   statefulSets: sampleStatefulSets,

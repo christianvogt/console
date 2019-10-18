@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { FireMan_ as FireMan } from '@console/internal/components/factory';
 import { Firehose } from '@console/internal/components/utils';
-import { DevPreviewBadge } from '@console/shared';
+import { getBadgeFromType } from '@console/shared';
 import { referenceForModel } from '@console/internal/module/k8s';
 import { PipelineModel } from '../../models';
-import DefaultPage from '../DefaultPage';
+import ProjectListPage from '../projects/ProjectListPage';
 import { filters } from './PipelineAugmentRuns';
 import PipelineAugmentRunsWrapper from './PipelineAugmentRunsWrapper';
 
@@ -25,21 +25,20 @@ const PipelinesPage: React.FC<PipelinesPageProps> = ({ namespace }) => {
   return namespace ? (
     <FireMan
       canCreate={false}
-      canExpand={false}
       filterLabel="by name"
       textFilter="name"
       resources={resources}
       title={PipelineModel.labelPlural}
-      badge={<DevPreviewBadge />}
+      badge={getBadgeFromType(PipelineModel.badge)}
     >
       <Firehose resources={resources}>
         <PipelineAugmentRunsWrapper />
       </Firehose>
     </FireMan>
   ) : (
-    <DefaultPage title="Pipelines" badge={<DevPreviewBadge />}>
+    <ProjectListPage title="Pipelines" badge={getBadgeFromType(PipelineModel.badge)}>
       Select a project to view the list of pipelines
-    </DefaultPage>
+    </ProjectListPage>
   );
 };
 

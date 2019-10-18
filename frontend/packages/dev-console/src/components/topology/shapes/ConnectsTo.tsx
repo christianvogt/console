@@ -37,6 +37,7 @@ const arrowBoundingBox = (
 const ConnectsTo: React.FC<ConnectsToProps> = ({
   source,
   target,
+  dragActive,
   isDragging,
   targetArrowRef,
   onRemove,
@@ -47,7 +48,11 @@ const ConnectsTo: React.FC<ConnectsToProps> = ({
 
   return (
     <React.Fragment>
-      <g onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+      <g
+        data-test-id="connects-to-handler"
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+      >
         <path
           d={`M ${lineBox[0]} L ${lineBox[1]} L ${lineBox[2]} L ${lineBox[3]} Z`}
           fillOpacity={0}
@@ -62,11 +67,13 @@ const ConnectsTo: React.FC<ConnectsToProps> = ({
         <BaseEdge
           source={source}
           target={target}
-          targetMarkerId={hover ? TARGET_ARROW_MARKER_HOVER_ID : TARGET_ARROW_MARKER_ID}
+          targetMarkerId={
+            hover && !dragActive ? TARGET_ARROW_MARKER_HOVER_ID : TARGET_ARROW_MARKER_ID
+          }
           isDragging={isDragging}
           isHover={hover}
         />
-        {hover && (
+        {hover && !dragActive && (
           <g
             transform={`translate(${source.x + (target.x - source.x) * 0.5}, ${source.y +
               (target.y - source.y) * 0.5})`}

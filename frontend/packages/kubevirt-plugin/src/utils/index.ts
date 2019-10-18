@@ -14,11 +14,6 @@ import {
   getKind,
   getUID,
 } from '@console/shared/src/selectors';
-import {
-  getAPIVersion as getOwnerReferenceAPIVersion,
-  getKind as getOwnerReferenceKind,
-  getName as getOwnerReferenceName,
-} from '../selectors/owner-reference/selectors';
 import { CPU } from '../types';
 
 export const getBasicID = <A extends K8sResourceKind = K8sResourceKind>(entity: A) =>
@@ -28,6 +23,9 @@ export const prefixedID = (idPrefix: string, id: string) =>
   idPrefix && id ? `${idPrefix}-${id}` : null;
 
 export const joinIDs = (...ids: string[]) => ids.join('-');
+
+export const isLoaded = (result: FirehoseResult<K8sResourceKind | K8sResourceKind[]>) =>
+  result && result.loaded;
 
 export const getLoadedData = (
   result: FirehoseResult<K8sResourceKind | K8sResourceKind[]>,
@@ -73,10 +71,32 @@ export const buildOwnerReference = (
   blockOwnerDeletion,
 });
 
-export const compareOwnerReference = (obj: OwnerReference, otherObj: OwnerReference) =>
-  getOwnerReferenceAPIVersion(obj) === getOwnerReferenceAPIVersion(otherObj) &&
-  getOwnerReferenceKind(obj) === getOwnerReferenceKind(otherObj) &&
-  getOwnerReferenceName(obj) === getOwnerReferenceName(otherObj);
+export const buildOwnerReferenceForModel = (
+  model: K8sKind,
+  name: string,
+  uid: string,
+): OwnerReference => ({
+  apiVersion: `${model.apiGroup}/${model.apiVersion}`,
+  kind: getKind(model),
+  name,
+  uid,
+});
+
+export const compareOwnerReference = (obj: OwnerReference, otherObj: OwnerReference) => {
+  if (obj === otherObj) {
+    return true;
+  }
+  if (!obj || !otherObj) {
+    return false;
+  }
+  const isUIDEqual = obj.uid && otherObj.uid ? obj.uid === otherObj.uid : true;
+  return (
+    obj.apiVersion === otherObj.apiVersion &&
+    obj.kind === otherObj.kind &&
+    obj.name === otherObj.name &&
+    isUIDEqual
+  );
+};
 
 export const isCPUEqual = (a: CPU, b: CPU) =>
   a.sockets === b.sockets && a.cores === b.cores && a.threads === b.threads;

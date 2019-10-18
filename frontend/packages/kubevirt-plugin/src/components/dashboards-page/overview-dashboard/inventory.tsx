@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { OffIcon } from '@patternfly/react-icons';
 import { PodKind } from '@console/internal/module/k8s';
-import { StatusGroupMapper } from '@console/internal/components/dashboard/inventory-card/inventory-item';
-import { InventoryStatusGroup } from '@console/internal/components/dashboard/inventory-card/status-group';
+import { StatusGroupMapper } from '@console/shared/src/components/dashboard/inventory-card/InventoryItem';
+import { InventoryStatusGroup } from '@console/shared/src/components/dashboard/inventory-card/status-group';
 import { getVMStatus } from '../../../statuses/vm/vm';
 import { VMKind } from '../../../types';
 import {
@@ -23,7 +23,7 @@ import {
 import './inventory.scss';
 
 const VM_STATUS_GROUP_MAPPER = {
-  [InventoryStatusGroup.OK]: [VM_STATUS_RUNNING],
+  [InventoryStatusGroup.NOT_MAPPED]: [VM_STATUS_RUNNING],
   'vm-off': [VM_STATUS_OFF],
   [InventoryStatusGroup.PROGRESS]: [
     VM_STATUS_V2V_CONVERSION_IN_PROGRESS,
@@ -55,7 +55,7 @@ export const getVMStatusGroups: StatusGroupMapper = (vms, { pods, migrations }) 
       statusIDs: [],
       count: 0,
     },
-    [InventoryStatusGroup.OK]: {
+    [InventoryStatusGroup.UNKNOWN]: {
       statusIDs: [],
       count: 0,
     },
@@ -70,7 +70,7 @@ export const getVMStatusGroups: StatusGroupMapper = (vms, { pods, migrations }) 
     const group =
       Object.keys(VM_STATUS_GROUP_MAPPER).find((key) =>
         VM_STATUS_GROUP_MAPPER[key].includes(status),
-      ) || InventoryStatusGroup.NOT_MAPPED;
+      ) || InventoryStatusGroup.UNKNOWN;
     groups[group].count++;
   });
   return groups;

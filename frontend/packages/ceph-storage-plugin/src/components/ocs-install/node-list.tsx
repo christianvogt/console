@@ -9,7 +9,7 @@ import {
   TableVariant,
   TableGridBreakpoint,
 } from '@patternfly/react-table';
-import { getInfrastructurePlatform } from '@console/shared';
+import { getInfrastructurePlatform, getNodeRoles } from '@console/shared';
 import { tableFilters } from '@console/internal/components/factory/table-filters';
 import { ActionGroup, Button } from '@patternfly/react-core';
 import { ButtonBar } from '@console/internal/components/utils/button-bar';
@@ -21,7 +21,6 @@ import {
   ResourceLink,
 } from '@console/internal/components/utils/index';
 import {
-  getNodeRoles,
   k8sCreate,
   k8sPatch,
   k8sGet,
@@ -32,19 +31,13 @@ import {
   StorageClassResourceKind,
 } from '@console/internal/module/k8s';
 import { NodeModel, InfrastructureModel, StorageClassModel } from '@console/internal/models';
+import { isDefaultClass } from '@console/internal/components/storage-class';
 import { OCSServiceModel } from '../../models';
-import {
-  infraProvisionerMap,
-  minSelectedNode,
-  ocsRequestData,
-  taintObj,
-} from '../../constants/ocs-install';
+import { infraProvisionerMap, minSelectedNode, ocsRequestData } from '../../constants/ocs-install';
 
 import './ocs-install.scss';
 
 const ocsLabel = 'cluster.ocs.openshift.io/openshift-storage';
-const nodeLabel = 'cluster.ocs.openshift.io~1openshift-storage';
-const defaultSAnotations = { 'storageclass.kubernetes.io/is-default-class': 'true' };
 
 const getConvertedUnits = (value: string) => {
   return humanizeBinaryBytes(convertToBaseValue(value)).string || '-';
@@ -178,7 +171,7 @@ const CustomNodeTable: React.FC<CustomNodeTableProps> = ({ data, loaded, ocsProp
       setNodes(formattedNodes);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(data), loaded]);
+  }, [data, loaded]);
 
   const onSelect = (
     event: React.MouseEvent<HTMLButtonElement>,
@@ -204,7 +197,7 @@ const CustomNodeTable: React.FC<CustomNodeTableProps> = ({ data, loaded, ocsProp
       const patch = [
         {
           op: 'add',
-          path: `/metadata/labels/${nodeLabel}`,
+          path: '/metadata/labels/cluster.ocs.openshift.io~1openshift-storage',
           value: '',
         },
       ];
@@ -213,34 +206,35 @@ const CustomNodeTable: React.FC<CustomNodeTableProps> = ({ data, loaded, ocsProp
   };
 
   // tainting the selected nodes
-  const makeTaintNodesRequest = (selectedNode: NodeKind[]): Promise<NodeKind>[] => {
-    const taintNodesRequest = selectedNode
-      .filter((node: NodeKind) => {
-        const roles = getNodeRoles(node);
-        // don't taint master nodes as its already tainted
-        return roles.indexOf('master') === -1;
-      })
-      .map((node) => {
-        const taints = node.spec && node.spec.taints ? [...node.spec.taints, taintObj] : [taintObj];
-        const patch = [
-          {
-            value: taints,
-            path: '/spec/taints',
-            op: node.spec.taints ? 'replace' : 'add',
-          },
-        ];
-        return k8sPatch(NodeModel, node, patch);
-      });
+  // const makeTaintNodesRequest = (selectedNode: NodeKind[]): Promise<NodeKind>[] => {
+  //   const taintNodesRequest = selectedNode
+  //     .filter((node: NodeKind) => {
+  //       const roles = getNodeRoles(node);
+  //       // don't taint master nodes as its already tainted
+  //       return roles.indexOf('master') === -1;
+  //     })
+  //     .map((node) => {
+  //       const taints = node.spec && node.spec.taints ? [...node.spec.taints, taintObj] : [taintObj];
+  //       const patch = [
+  //         {
+  //           value: taints,
+  //           path: '/spec/taints',
+  //           op: node.spec.taints ? 'replace' : 'add',
+  //         },
+  //       ];
+  //       return k8sPatch(NodeModel, node, patch);
+  //     });
 
-    return taintNodesRequest;
-  };
+  //   return taintNodesRequest;
+  // };
 
   const makeOCSRequest = () => {
     const selectedData: NodeKind[] = _.filter(nodes, 'selected');
     const promises = [];
 
     promises.push(...makeLabelNodesRequest(selectedData));
-    promises.push(...makeTaintNodesRequest(selectedData));
+    // intentionally keeping the taint logic as its required in 4.3 and will be handled with checkbox selection
+    // promises.push(...makeTaintNodesRequest(selectedData));
 
     const ocsObj = _.cloneDeep(ocsRequestData);
     ocsObj.spec.storageDeviceSets[0].dataPVCTemplate.spec.storageClassName = storageClass;
@@ -278,7 +272,7 @@ const CustomNodeTable: React.FC<CustomNodeTableProps> = ({ data, loaded, ocsProp
         const scList = _.filter(storageClasses, (sc) => sc.provisioner === provisioner);
         // take the default storageclass
         _.forEach(scList, (sc) => {
-          if (sc.metadata && _.isEqual(sc.metadata.annotations, defaultSAnotations)) {
+          if (isDefaultClass(sc)) {
             storageClass = sc.metadata.name;
           }
         });
@@ -294,6 +288,7 @@ const CustomNodeTable: React.FC<CustomNodeTableProps> = ({ data, loaded, ocsProp
     <>
       <div className="node-list__max-height">
         <Table
+          aria-label="node list table"
           onSelect={onSelect}
           cells={columns}
           rows={nodes}

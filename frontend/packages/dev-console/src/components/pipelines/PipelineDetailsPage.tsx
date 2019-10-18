@@ -3,7 +3,6 @@ import { DetailsPage, DetailsPageProps } from '@console/internal/components/fact
 import { Kebab, navFactory } from '@console/internal/components/utils';
 import { viewYamlComponent } from '@console/internal/components//utils/horizontal-nav';
 import { k8sGet, k8sList } from '@console/internal/module/k8s';
-import { DevPreviewBadge } from '@console/shared';
 import { ErrorPage404 } from '@console/internal/components/error';
 import {
   rerunPipeline,
@@ -37,19 +36,20 @@ class PipelineDetailsPage extends React.Component<DetailsPageProps, PipelineDeta
           labelSelector: { 'tekton.dev/pipeline': res.metadata.name },
         })
           .then((listres) => {
+            const latestRun = getLatestRun({ data: listres }, 'creationTimestamp');
             this.setState({
               menuActions: [
-                startPipeline(res, handlePipelineRunSubmit),
-                rerunPipeline(
-                  res,
-                  getLatestRun({ data: listres }, 'creationTimestamp'),
-                  handlePipelineRunSubmit,
-                ),
+                () => startPipeline(PipelineModel, res, handlePipelineRunSubmit),
+                ...(latestRun && latestRun.metadata
+                  ? [() => rerunPipeline(PipelineModel, res, latestRun, handlePipelineRunSubmit)]
+                  : []),
                 Kebab.factory.Delete,
               ],
             });
           })
-          .catch((error) => this.setState({ errorCode: error.response.status }));
+          .catch((error) => {
+            this.setState({ errorCode: error.response.status });
+          });
       })
       .catch((error) => this.setState({ errorCode: error.response.status }));
   }
@@ -93,7 +93,6 @@ class PipelineDetailsPage extends React.Component<DetailsPageProps, PipelineDeta
             ),
           },
         ]}
-        badge={<DevPreviewBadge />}
       />
     );
   }

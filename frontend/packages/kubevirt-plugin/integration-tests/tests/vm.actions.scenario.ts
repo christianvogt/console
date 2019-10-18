@@ -6,8 +6,11 @@ import {
   isLoaded,
   textFilter,
 } from '../../../../integration-tests/views/crud.view';
-import { listViewAction } from '../views/vm.actions.view';
-import { waitForActionFinished } from '../views/virtualMachine.view';
+import {
+  waitForActionFinished,
+  waitForStatusIcon,
+  statusIcons,
+} from '../views/virtualMachine.view';
 import {
   addLeakableResource,
   createResource,
@@ -15,68 +18,76 @@ import {
   removeLeakableResource,
   waitForCount,
 } from '../../../console-shared/src/test-utils/utils';
-import { getVmManifest } from './utils/mocks';
+import { getVMManifest } from './utils/mocks';
 import { fillInput } from './utils/utils';
 import {
   VM_BOOTUP_TIMEOUT_SECS,
   VM_ACTIONS_TIMEOUT_SECS,
   PAGE_LOAD_TIMEOUT_SECS,
-  VMACTIONS,
+  VM_ACTIONS,
   TABS,
+  VM_IMPORT_TIMEOUT_SECS,
 } from './utils/consts';
 import { VirtualMachine } from './models/virtualMachine';
 
 describe('Test VM actions', () => {
   const leakedResources = new Set<string>();
-  const testVm = getVmManifest('Container', testName);
+  const testVM = getVMManifest('URL', testName);
 
   afterAll(async () => {
     removeLeakedResources(leakedResources);
   });
 
-  describe('Test VM list view kebab actions', () => {
+  describe('Test VM list view kebab dropdown', () => {
     const vmName = `vm-list-actions-${testName}`;
+    let vm: VirtualMachine;
 
     beforeAll(async () => {
-      testVm.metadata.name = vmName;
-      createResource(testVm);
-      addLeakableResource(leakedResources, testVm);
+      testVM.metadata.name = vmName;
+      createResource(testVM);
+      addLeakableResource(leakedResources, testVM);
+      vm = new VirtualMachine(testVM.metadata);
 
       // Navigate to Virtual Machines page
       await browser.get(`${appHost}/k8s/ns/${testName}/virtualmachines`);
       await isLoaded();
       await fillInput(textFilter, vmName);
       await resourceRowsPresent();
-    });
+      await waitForStatusIcon(statusIcons.off, VM_IMPORT_TIMEOUT_SECS);
+    }, VM_IMPORT_TIMEOUT_SECS);
 
-    it('Starts VM', async () => {
-      await listViewAction(vmName)(VMACTIONS.START, true);
-      await fillInput(textFilter, vmName);
-      await waitForActionFinished(VMACTIONS.START);
-    });
+    it(
+      'Starts VM',
+      async () => {
+        await vm.listViewAction(VM_ACTIONS.START);
+        await fillInput(textFilter, vmName);
+        await waitForActionFinished(VM_ACTIONS.START);
+      },
+      VM_BOOTUP_TIMEOUT_SECS,
+    );
 
     it(
       'Restarts VM',
       async () => {
-        await listViewAction(vmName)(VMACTIONS.RESTART, true);
+        await vm.listViewAction(VM_ACTIONS.RESTART);
         await fillInput(textFilter, vmName);
-        await waitForActionFinished(VMACTIONS.RESTART);
+        await waitForActionFinished(VM_ACTIONS.RESTART);
       },
       VM_ACTIONS_TIMEOUT_SECS,
     );
 
     it('Stops VM', async () => {
-      await listViewAction(vmName)(VMACTIONS.STOP, true);
+      await vm.listViewAction(VM_ACTIONS.STOP);
       await fillInput(textFilter, vmName);
-      await waitForActionFinished(VMACTIONS.STOP);
+      await waitForActionFinished(VM_ACTIONS.STOP);
     });
 
     it('Deletes VM', async () => {
-      await listViewAction(vmName)(VMACTIONS.DELETE, true);
+      await vm.listViewAction(VM_ACTIONS.DELETE);
       await isLoaded();
       await fillInput(textFilter, vmName);
       await browser.wait(until.and(waitForCount(resourceRows, 0)), PAGE_LOAD_TIMEOUT_SECS);
-      removeLeakableResource(leakedResources, testVm);
+      removeLeakableResource(leakedResources, testVM);
     });
   });
 
@@ -85,16 +96,16 @@ describe('Test VM actions', () => {
     const vm = new VirtualMachine({ name: vmName, namespace: testName });
 
     beforeAll(async () => {
-      testVm.metadata.name = vmName;
-      createResource(testVm);
-      addLeakableResource(leakedResources, testVm);
+      testVM.metadata.name = vmName;
+      createResource(testVM);
+      addLeakableResource(leakedResources, testVM);
       await vm.navigateToTab(TABS.OVERVIEW);
     });
 
     it(
       'Starts VM',
       async () => {
-        await vm.action(VMACTIONS.START);
+        await vm.action(VM_ACTIONS.START);
       },
       VM_BOOTUP_TIMEOUT_SECS,
     );
@@ -102,21 +113,21 @@ describe('Test VM actions', () => {
     it(
       'Restarts VM',
       async () => {
-        await vm.action(VMACTIONS.RESTART);
+        await vm.action(VM_ACTIONS.RESTART);
       },
       VM_ACTIONS_TIMEOUT_SECS,
     );
 
     it('Stops VM', async () => {
-      await vm.action(VMACTIONS.STOP);
+      await vm.action(VM_ACTIONS.STOP);
     });
 
     it('Deletes VM', async () => {
-      await vm.action(VMACTIONS.DELETE);
+      await vm.action(VM_ACTIONS.DELETE);
       await isLoaded();
       await fillInput(textFilter, vmName);
       await browser.wait(until.and(waitForCount(resourceRows, 0)), PAGE_LOAD_TIMEOUT_SECS);
-      removeLeakableResource(leakedResources, testVm);
+      removeLeakableResource(leakedResources, testVM);
     });
   });
 });

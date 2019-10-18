@@ -25,11 +25,13 @@ import {
   knativeServingResourcesRevision,
   knativeServingResourcesConfigurations,
   knativeServingResourcesRoutes,
+  knativeServingResourcesServices,
 } from './utils/create-knative-utils';
 import {
   getKnativeServingConfigurations,
   getKnativeServingRoutes,
   getKnativeServingRevisions,
+  getKnativeServingServices,
 } from './utils/get-knative-resources';
 
 type ConsumedExtensions =
@@ -165,22 +167,20 @@ const plugin: Plugin<ConsumedExtensions> = [
     },
   },
   {
+    type: 'Overview/CRD',
+    properties: {
+      resources: knativeServingResourcesServices,
+      required: FLAG_KNATIVE_SERVING_SERVICE,
+      utils: getKnativeServingServices,
+    },
+  },
+  {
     type: 'Page/Resource/List',
     properties: {
       model: models.RevisionModel,
       loader: async () =>
         (await import(
           './components/revisions/RevisionsPage' /* webpackChunkName: "knative-revisions-page" */
-        )).default,
-    },
-  },
-  {
-    type: 'Page/Resource/Details',
-    properties: {
-      model: models.RevisionModel,
-      loader: async () =>
-        (await import(
-          './components/revisions/RevisionDetailsPage' /* webpackChunkName: "knative-revision-details-page" */
         )).default,
     },
   },

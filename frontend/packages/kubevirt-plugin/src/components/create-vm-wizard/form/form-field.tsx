@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { inject } from '@console/internal/components/utils';
+import { ValidationErrorType } from '@console/shared';
 import { getPlaceholder, getFieldId, getFieldTitle } from '../utils/vm-settings-tab-utils';
 import { iGetIn } from '../../../utils/immutable';
 import {
@@ -9,7 +10,6 @@ import {
   isFieldDisabled,
   isFieldRequired,
 } from '../selectors/immutable/vm-settings';
-import { ValidationErrorType } from '../../../utils/validations/types';
 import { FormFieldContext } from './form-field-context';
 
 export enum FormFieldType {
@@ -36,7 +36,7 @@ const setSupported = (fieldType: FormFieldType, supportedTypes: Set<FormFieldTyp
   supportedTypes.has(fieldType) ? value : undefined;
 
 // renders only when props change (shallow compare)
-export const FormField: React.FC<FormFieldProps> = ({ children, isDisabled }) => {
+export const FormField: React.FC<FormFieldProps> = ({ children, isDisabled, value }) => {
   return (
     <FormFieldContext.Consumer>
       {({
@@ -49,7 +49,7 @@ export const FormField: React.FC<FormFieldProps> = ({ children, isDisabled }) =>
         isLoading: boolean;
       }) => {
         const set = setSupported.bind(undefined, fieldType);
-        const value = iGetFieldValue(field);
+        const val = value || iGetFieldValue(field);
         const key = iGetFieldKey(field);
         const disabled = isDisabled || isFieldDisabled(field) || isLoading;
 
@@ -57,8 +57,8 @@ export const FormField: React.FC<FormFieldProps> = ({ children, isDisabled }) =>
           children,
           _.omitBy(
             {
-              value: hasValue.has(fieldType) ? value || getPlaceholder(key) || '' : undefined,
-              isChecked: set(hasIsChecked, value),
+              value: hasValue.has(fieldType) ? val || getPlaceholder(key) || '' : undefined,
+              isChecked: set(hasIsChecked, val),
               isDisabled: set(hasIsDisabled, disabled),
               disabled: set(hasDisabled, disabled),
               isRequired: set(hasIsRequired, isFieldRequired(field)),
@@ -77,4 +77,5 @@ export const FormField: React.FC<FormFieldProps> = ({ children, isDisabled }) =>
 type FormFieldProps = {
   children: React.ReactNode;
   isDisabled?: boolean;
+  value?: any;
 };

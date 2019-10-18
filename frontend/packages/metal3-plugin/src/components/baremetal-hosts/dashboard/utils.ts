@@ -1,21 +1,25 @@
-import { StatusGroupMapper } from '@console/internal/components/dashboard/inventory-card/inventory-item';
-import { InventoryStatusGroup } from '@console/internal/components/dashboard/inventory-card/status-group';
+import { StatusGroupMapper } from '@console/shared/src/components/dashboard/inventory-card/InventoryItem';
+import { InventoryStatusGroup } from '@console/shared/src/components/dashboard/inventory-card/status-group';
 import { MachineKind, NodeKind } from '@console/internal/module/k8s';
 import { getMachineNode, getName } from '@console/shared/src/selectors';
 import { getHostStatus } from '../../../utils/host-status';
 import { HOST_ERROR_STATES, HOST_PROGRESS_STATES, HOST_SUCCESS_STATES } from '../../../constants';
 import { findNodeMaintenance, getHostMachine } from '../../../selectors';
 import { getHostFilterStatus } from '../table-filters';
+import { BareMetalHostKind } from '../../../types';
 
 const BMH_STATUS_GROUP_MAPPER = {
-  [InventoryStatusGroup.OK]: HOST_SUCCESS_STATES,
+  [InventoryStatusGroup.NOT_MAPPED]: HOST_SUCCESS_STATES,
   [InventoryStatusGroup.PROGRESS]: HOST_PROGRESS_STATES,
   [InventoryStatusGroup.ERROR]: HOST_ERROR_STATES,
 };
 
-export const getBMHStatusGroups: StatusGroupMapper = (hosts, { machines, nodes, maintenances }) => {
+export const getBMHStatusGroups: StatusGroupMapper = (
+  hosts: BareMetalHostKind[],
+  { machines, nodes, maintenances },
+) => {
   const groups = {
-    [InventoryStatusGroup.OK]: {
+    [InventoryStatusGroup.NOT_MAPPED]: {
       statusIDs: ['ready', 'provisioned'],
       count: 0,
       filterType: 'host-status',
@@ -30,7 +34,7 @@ export const getBMHStatusGroups: StatusGroupMapper = (hosts, { machines, nodes, 
       count: 0,
       filterType: 'host-status',
     },
-    [InventoryStatusGroup.NOT_MAPPED]: {
+    [InventoryStatusGroup.UNKNOWN]: {
       statusIDs: ['other'],
       count: 0,
       filterType: 'host-status',

@@ -5,13 +5,14 @@ import { menuActions } from '../stateful-set';
 import { ResourceSummary } from '../utils';
 
 import { OverviewDetailsResourcesTab } from './resource-overview-page';
-import { OverviewItem } from '.';
 import { ResourceOverviewDetails } from './resource-overview-details';
+import { OverviewItem } from '@console/shared';
 
-const StatefulSetOverviewDetails: React.SFC<StatefulSetOverviewDetailsProps> = ({item}) =>
+const StatefulSetOverviewDetails: React.SFC<StatefulSetOverviewDetailsProps> = ({ item }) => (
   <div className="overview__sidebar-pane-body resource-overview__body">
     <ResourceSummary resource={item.obj} showPodSelector showNodeSelector showTolerations />
-  </div>;
+  </div>
+);
 
 const tabs = [
   {
@@ -24,13 +25,14 @@ const tabs = [
   },
 ];
 
-export const StatefulSetOverview: React.SFC<StatefulSetOverviewProps> = ({item}) =>
+export const StatefulSetOverview: React.SFC<StatefulSetOverviewProps> = ({ item }) => (
   <ResourceOverviewDetails
     item={item}
     kindObj={StatefulSetModel}
     menuActions={menuActions}
     tabs={tabs}
-  />;
+  />
+);
 
 type StatefulSetOverviewDetailsProps = {
   item: OverviewItem;

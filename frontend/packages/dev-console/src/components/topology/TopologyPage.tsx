@@ -10,9 +10,9 @@ import { FLAG_KNATIVE_SERVING_SERVICE } from '@console/knative-plugin';
 import EmptyState from '../EmptyState';
 import NamespacedPage from '../NamespacedPage';
 import ProjectsExistWrapper from '../ProjectsExistWrapper';
-import DefaultPage from '../DefaultPage';
+import ProjectListPage from '../projects/ProjectListPage';
 import { getCheURL } from './topology-utils';
-import TopologyDataController, { RenderProps } from './TopologyDataController';
+import ConnectedTopologyDataController, { RenderProps } from './TopologyDataController';
 import Topology from './Topology';
 
 interface StateProps {
@@ -82,7 +82,7 @@ const TopologyPage: React.FC<Props> = ({ match, activeApplication, knative, cheU
           <ProjectsExistWrapper title="Topology">
             {() => {
               return namespace ? (
-                <TopologyDataController
+                <ConnectedTopologyDataController
                   application={application}
                   namespace={namespace}
                   render={renderTopology}
@@ -90,7 +90,9 @@ const TopologyPage: React.FC<Props> = ({ match, activeApplication, knative, cheU
                   cheURL={cheURL}
                 />
               ) : (
-                <DefaultPage title="Topology">Select a project to view the topology</DefaultPage>
+                <ProjectListPage title="Topology">
+                  Select a project to view the topology
+                </ProjectListPage>
               );
             }}
           </ProjectsExistWrapper>

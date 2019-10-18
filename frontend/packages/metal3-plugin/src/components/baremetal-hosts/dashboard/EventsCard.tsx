@@ -2,26 +2,20 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import { FirehoseResource, FirehoseResult } from '@console/internal/components/utils';
 import { EventModel, MachineModel, NodeModel } from '@console/internal/models';
-import {
-  DashboardCard,
-  DashboardCardBody,
-  DashboardCardHeader,
-  DashboardCardTitle,
-} from '@console/internal/components/dashboard/dashboard-card';
-import { EventsBody } from '@console/internal/components/dashboard/events-card/events-body';
-import {
-  EventKind,
-  K8sResourceKind,
-  MachineKind,
-  referenceForModel,
-} from '@console/internal/module/k8s';
+import DashboardCard from '@console/shared/src/components/dashboard/dashboard-card/DashboardCard';
+import DashboardCardBody from '@console/shared/src/components/dashboard/dashboard-card/DashboardCardBody';
+import DashboardCardHeader from '@console/shared/src/components/dashboard/dashboard-card/DashboardCardHeader';
+import DashboardCardTitle from '@console/shared/src/components/dashboard/dashboard-card/DashboardCardTitle';
+import EventsBody from '@console/shared/src/components/dashboard/events-card/EventsBody';
+import { EventKind, MachineKind, referenceForModel } from '@console/internal/module/k8s';
 import {
   DashboardItemProps,
   withDashboardResources,
-} from '@console/internal/components/dashboards-page/with-dashboard-resources';
+} from '@console/internal/components/dashboard/with-dashboard-resources';
 import { getName, getNamespace, getMachineNodeName } from '@console/shared';
 import { getHostMachineName } from '../../../selectors';
 import { BareMetalHostModel } from '../../../models';
+import { BareMetalHostKind } from '../../../types';
 
 const eventsResource: FirehoseResource = { isList: true, kind: EventModel.kind, prop: 'events' };
 const getMachineResource = (name: string, namespace: string): FirehoseResource => ({
@@ -45,7 +39,11 @@ const machesInvolvedObject = (
     namespace,
   });
 
-const hostEventsFilter = (host: K8sResourceKind, machine: MachineKind, event: EventKind): boolean =>
+const hostEventsFilter = (
+  host: BareMetalHostKind,
+  machine: MachineKind,
+  event: EventKind,
+): boolean =>
   machesInvolvedObject(BareMetalHostModel.kind, getName(host), getNamespace(host), event) ||
   machesInvolvedObject(MachineModel.kind, getName(machine), getNamespace(machine), event) ||
   machesInvolvedObject(NodeModel.kind, getMachineNodeName(machine), null, event);
@@ -92,5 +90,5 @@ const EventsCard: React.FC<EventsCardProps> = ({
 export default withDashboardResources(EventsCard);
 
 type EventsCardProps = DashboardItemProps & {
-  obj: K8sResourceKind;
+  obj: BareMetalHostKind;
 };

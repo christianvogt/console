@@ -1,7 +1,7 @@
 import { Map as ImmutableMap } from 'immutable';
 import * as _ from 'lodash';
+import { ValidationObject } from '@console/shared';
 import { UpdateOptions, VMSettingsValidationConfig } from '../types';
-import { ValidationObject } from '../../../../utils/validations/types';
 import { VMSettingsFieldType } from '../../types';
 
 export const getValidationUpdate = (
@@ -17,6 +17,10 @@ export const getValidationUpdate = (
     const { detectValueChanges, detectCommonDataChanges, validator } = config[validationFieldKey];
 
     const field = fields.get(validationFieldKey);
+
+    if (field.get('skipValidation')) {
+      return updateAcc;
+    }
 
     const detectValues = _.isFunction(detectValueChanges)
       ? detectValueChanges(field, options)

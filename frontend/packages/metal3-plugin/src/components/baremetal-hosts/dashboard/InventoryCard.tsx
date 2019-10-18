@@ -3,20 +3,21 @@ import * as _ from 'lodash';
 import {
   DashboardItemProps,
   withDashboardResources,
-} from '@console/internal/components/dashboards-page/with-dashboard-resources';
-import { DashboardCard } from '@console/internal/components/dashboard/dashboard-card';
-import { DashboardCardBody } from '@console/internal/components/dashboard/dashboard-card/card-body';
-import { DashboardCardHeader } from '@console/internal/components/dashboard/dashboard-card/card-header';
-import { DashboardCardTitle } from '@console/internal/components/dashboard/dashboard-card/card-title';
-import { InventoryBody } from '@console/internal/components/dashboard/inventory-card/inventory-body';
-import { InventoryItem } from '@console/internal/components/dashboard/inventory-card/inventory-item';
-import { K8sResourceKind, referenceForModel } from '@console/internal/module/k8s';
+} from '@console/internal/components/dashboard/with-dashboard-resources';
+import DashboardCard from '@console/shared/src/components/dashboard/dashboard-card/DashboardCard';
+import DashboardCardBody from '@console/shared/src/components/dashboard/dashboard-card/DashboardCardBody';
+import DashboardCardHeader from '@console/shared/src/components/dashboard/dashboard-card/DashboardCardHeader';
+import DashboardCardTitle from '@console/shared/src/components/dashboard/dashboard-card/DashboardCardTitle';
+import InventoryBody from '@console/shared/src/components/dashboard/inventory-card/InventoryBody';
+import InventoryItem from '@console/shared/src/components/dashboard/inventory-card/InventoryItem';
+import { referenceForModel } from '@console/internal/module/k8s';
 import { FirehoseResource } from '@console/internal/components/utils';
 import { MachineModel } from '@console/internal/models';
 import { getNamespace, getMachineInternalIP } from '@console/shared';
 import { getInstantVectorStats } from '@console/internal/components/graphs/utils';
 import { PrometheusResponse } from '@console/internal/components/graphs';
 import { getHostMachineName } from '../../../selectors';
+import { BareMetalHostKind } from '../../../types';
 import { getInventoryQueries, HostQuery, getHostQueryResultError } from './queries';
 
 const getResources = (namespace: string, machineName: string): FirehoseResource[] => [
@@ -82,8 +83,7 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
         <InventoryBody>
           <InventoryItem
             isLoading={!podData}
-            singularTitle="Pod"
-            pluralTitle="Pods"
+            title="Pod"
             count={podCount}
             error={podQueryError || podError || !podStats.length}
           />
@@ -96,5 +96,5 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
 export default withDashboardResources(InventoryCard);
 
 type InventoryCardProps = DashboardItemProps & {
-  obj: K8sResourceKind;
+  obj: BareMetalHostKind;
 };

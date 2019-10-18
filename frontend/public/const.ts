@@ -37,7 +37,8 @@ export const COMMUNITY_PROVIDERS_WARNING_LOCAL_STORAGE_KEY = `${STORAGE_PREFIX}/
 // Bootstrap user for OpenShift 4.0 clusters
 export const KUBE_ADMIN_USERNAME = 'kube:admin';
 
-export const RH_OPERATOR_SUPPORT_POLICY_LINK = 'https://access.redhat.com/third-party-software-support';
+export const RH_OPERATOR_SUPPORT_POLICY_LINK =
+  'https://access.redhat.com/third-party-software-support';
 
 // Package manifests for the OperatorHub use this label.
 export const OPERATOR_HUB_LABEL = 'openshift-marketplace';
@@ -57,6 +58,8 @@ export enum FLAGS {
   CAN_LIST_STORE = 'CAN_LIST_STORE',
   CAN_LIST_CRD = 'CAN_LIST_CRD',
   CAN_LIST_CHARGEBACK_REPORTS = 'CAN_LIST_CHARGEBACK_REPORTS',
+  CAN_LIST_USERS = 'CAN_LIST_USERS',
+  CAN_LIST_GROUPS = 'CAN_LIST_GROUPS',
   CAN_CREATE_PROJECT = 'CAN_CREATE_PROJECT',
   SHOW_OPENSHIFT_START_GUIDE = 'SHOW_OPENSHIFT_START_GUIDE',
   SERVICE_CATALOG = 'SERVICE_CATALOG',

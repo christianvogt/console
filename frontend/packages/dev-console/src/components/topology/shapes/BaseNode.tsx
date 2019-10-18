@@ -23,6 +23,7 @@ export interface BaseNodeProps {
   kind?: string;
   children?: React.ReactNode;
   attachments?: React.ReactNode;
+  dragActive?: boolean;
   isDragging?: boolean;
   isTarget?: boolean;
   onHover?(hovered: boolean): void;
@@ -87,6 +88,7 @@ export default class BaseNode extends React.Component<BaseNodeProps, State> {
       onHover,
       children,
       attachments,
+      dragActive,
       isDragging,
       isTarget,
     } = this.props;
@@ -103,6 +105,7 @@ export default class BaseNode extends React.Component<BaseNodeProps, State> {
     return (
       <g transform={`translate(${x}, ${y})`} className="odc-base-node">
         <g
+          data-test-id="base-node-handler"
           onClick={
             onSelect
               ? (e) => {
@@ -121,7 +124,9 @@ export default class BaseNode extends React.Component<BaseNodeProps, State> {
             cx={0}
             cy={0}
             r={outerRadius}
-            filter={hover ? createSvgIdUrl(FILTER_ID_HOVER) : createSvgIdUrl(FILTER_ID)}
+            filter={
+              hover && !dragActive ? createSvgIdUrl(FILTER_ID_HOVER) : createSvgIdUrl(FILTER_ID)
+            }
           />
           <g className={contentsClasses}>
             <image

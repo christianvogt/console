@@ -1,18 +1,20 @@
 export const DASH = '-';
-export const { STORAGE_CLASS = 'nfs-sc' } = process.env;
+export const { STORAGE_CLASS = 'rook-ceph-block' } = process.env;
 
 // TIMEOUTS
 const SEC = 1000;
-export const CLONE_VM_TIMEOUT_SECS = 300 * SEC;
+export const CLONE_VM_TIMEOUT_SECS = 360 * SEC;
 export const CLONED_VM_BOOTUP_TIMEOUT_SECS = 150 * SEC;
 export const PAGE_LOAD_TIMEOUT_SECS = 15 * SEC;
 export const TEMPLATE_ACTIONS_TIMEOUT_SECS = 90 * SEC;
 export const VM_ACTIONS_TIMEOUT_SECS = 250 * SEC;
-export const VM_BOOTUP_TIMEOUT_SECS = 200 * SEC;
-export const VM_MIGRATION_TIMEOUT_SECS = 190 * SEC;
+export const VM_BOOTUP_TIMEOUT_SECS = 230 * SEC;
+export const VM_MIGRATION_TIMEOUT_SECS = 260 * SEC;
 export const VM_STOP_TIMEOUT_SECS = 10 * SEC;
 export const VM_IP_ASSIGNMENT_TIMEOUT_SECS = 180 * SEC;
+export const VM_IMPORT_TIMEOUT_SECS = 80 * SEC;
 export const WINDOWS_IMPORT_TIMEOUT_SECS = 150 * SEC;
+export const VM_CREATE_AND_EDIT_TIMEOUT_SECS = 200 * SEC;
 
 export const POD_CREATION_TIMEOUT_SECS = 40 * SEC;
 export const POD_TERMINATION_TIMEOUT_SECS = 30 * SEC;
@@ -37,6 +39,11 @@ export const NODE_READY_STATUS = 'Ready';
 // Wizard dialog
 export const WIZARD_TABLE_FIRST_ROW = 1;
 
+// Kubevirt related
+export const KUBEVIRT_STORAGE_CLASS_DEFAULTS = 'kubevirt-storage-class-defaults';
+export const KUBEVIRT_PROJECT_NAME = 'openshift-cnv';
+export const COMMON_TEMPLATES_VERSION = 'v0.6.2';
+
 // Tab names
 export const TABS = {
   OVERVIEW: 'Overview',
@@ -49,15 +56,18 @@ export const TABS = {
 Object.freeze(TABS);
 
 // Tab names
-export const VMACTIONS = {
-  START: 'Start',
-  STOP: 'Stop',
-  CLONE: 'Clone',
-  RESTART: 'Restart',
-  MIGRATE: 'Events',
-  DELETE: 'Delete',
+export const VM_ACTIONS = {
+  START: 'Start Virtual Machine',
+  STOP: 'Stop Virtual Machine',
+  CLONE: 'Clone Virtual Machine',
+  RESTART: 'Restart Virtual Machine',
+  MIGRATE: 'Migrate Virtual Machine',
+  CANCEL: 'Cancel Virtual Machine Migration',
+  EDIT_LABELS: 'Edit Labels',
+  EDIT_ANNOTATIONS: 'Edit Annotations',
+  DELETE: 'Delete Virtual Machine',
 };
-Object.freeze(VMACTIONS);
+Object.freeze(VM_ACTIONS);
 
 // Network tab columns in VM Wizard
 export const networkWizardTabCol = {

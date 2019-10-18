@@ -1,10 +1,8 @@
 import * as React from 'react';
 import { FormGroup } from '@patternfly/react-core';
-import { LoadingInline } from '@console/internal/components/utils';
-import PopoverStatus from '@console/shared/src/components/status/PopoverStatus';
 import { HelpIcon } from '@patternfly/react-icons';
-import { ValidationErrorType } from '../../utils/validations/types';
-
+import { LoadingInline } from '@console/internal/components/utils';
+import { PopoverStatus, ValidationErrorType } from '@console/shared';
 import './form-row.scss';
 
 export const FormRow: React.FC<FormRowProps> = ({
@@ -16,6 +14,7 @@ export const FormRow: React.FC<FormRowProps> = ({
   isLoading,
   validationMessage,
   validationType,
+  validation,
   children,
 }) => {
   if (isHidden) {
@@ -27,8 +26,8 @@ export const FormRow: React.FC<FormRowProps> = ({
       label={title}
       isRequired={isRequired}
       fieldId={fieldId}
-      isValid={validationType !== ValidationErrorType.Error}
-      helperTextInvalid={validationMessage}
+      isValid={((validation && validation.type) || validationType) !== ValidationErrorType.Error}
+      helperTextInvalid={(validation && validation.message) || validationMessage}
     >
       {help && (
         <span className="kubevirt-form-row__icon-status-container">
@@ -55,7 +54,7 @@ export const FormRow: React.FC<FormRowProps> = ({
 
 type FormRowProps = {
   fieldId: string;
-  title: string;
+  title?: string;
   help?: string;
   helpTitle?: string;
   isHidden?: boolean;
@@ -63,5 +62,9 @@ type FormRowProps = {
   isLoading?: boolean;
   validationMessage?: string;
   validationType?: ValidationErrorType;
+  validation?: {
+    message?: string;
+    type?: ValidationErrorType;
+  };
   children?: React.ReactNode;
 };

@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import {
   Extension,
+  ExtensionTypeGuard,
   ActivePlugin,
   isModelDefinition,
   isFeatureFlag,
@@ -18,25 +19,28 @@ import {
   isDashboardsOverviewQuery,
   isDashboardsOverviewUtilizationItem,
   isDashboardsOverviewTopConsumerItem,
-  isDashboardsStorageTopConsumerUsed,
-  isDashboardsStorageTopConsumerRequested,
-  isDashboardsStorageCapacityDropdownItem,
   isOverviewResourceTab,
   isOverviewCRD,
   isGlobalConfig,
   isClusterServiceVersionAction,
   isKebabActions,
   isDevCatalogModel,
+  isDashboardsOverviewResourceActivity,
+  isDashboardsOverviewPrometheusActivity,
 } from './typings';
 
 /**
  * Registry used to query for Console extensions.
  */
 export class ExtensionRegistry {
-  private readonly extensions: Extension<any>[];
+  private readonly extensions: Extension[];
 
   public constructor(plugins: ActivePlugin[]) {
     this.extensions = _.flatMap(plugins.map((p) => p.extensions));
+  }
+
+  public get<E extends Extension>(typeGuard: ExtensionTypeGuard<E>): E[] {
+    return this.extensions.filter(typeGuard);
   }
 
   public getModelDefinitions() {
@@ -103,18 +107,6 @@ export class ExtensionRegistry {
     return this.extensions.filter(isDashboardsOverviewTopConsumerItem);
   }
 
-  public getDashboardsStorageTopConsumerUsed() {
-    return this.extensions.filter(isDashboardsStorageTopConsumerUsed);
-  }
-
-  public getDashboardsStorageTopConsumerRequested() {
-    return this.extensions.filter(isDashboardsStorageTopConsumerRequested);
-  }
-
-  public getDashboardsStorageCapacityDropdownItem() {
-    return this.extensions.filter(isDashboardsStorageCapacityDropdownItem);
-  }
-
   public getOverviewResourceTabs() {
     return this.extensions.filter(isOverviewResourceTab);
   }
@@ -137,5 +129,13 @@ export class ExtensionRegistry {
 
   public getDevCatalogModels() {
     return this.extensions.filter(isDevCatalogModel);
+  }
+
+  public getDashboardsOverviewResourceActivities() {
+    return this.extensions.filter(isDashboardsOverviewResourceActivity);
+  }
+
+  public getDashboardsOverviewPrometheusActivities() {
+    return this.extensions.filter(isDashboardsOverviewPrometheusActivity);
   }
 }

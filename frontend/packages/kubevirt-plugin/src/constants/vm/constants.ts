@@ -1,5 +1,6 @@
 export const VIRT_LAUNCHER_POD_PREFIX = 'virt-launcher-';
 export const BUS_VIRTIO = 'virtio';
+export const READABLE_VIRTIO = 'VirtIO';
 export const ANNOTATION_FIRST_BOOT = 'kubevirt.ui/firstBoot';
 export const CUSTOM_FLAVOR = 'Custom';
 
@@ -21,3 +22,13 @@ export const TEMPLATE_OS_NAME_ANNOTATION = 'name.os.template.kubevirt.io';
 export const DEFAULT_RDP_PORT = 3389;
 
 export const VM_DETAIL_OVERVIEW_HREF = 'overview';
+export const VM_DETAIL_DISKS_HREF = 'disks';
+export const VM_DETAIL_NETWORKS_HREF = 'nics';
+export const VM_DETAIL_CONSOLES_HREF = 'consoles';
+
+export const CLOUDINIT_DISK = 'cloudinitdisk';
+
+export enum DeviceType {
+  NIC = 'NIC',
+  DISK = 'DISK',
+}

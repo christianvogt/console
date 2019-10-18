@@ -73,11 +73,22 @@ export type CPURaw =
     }
   | string;
 
-export enum ProvisionSource {
-  PXE = 'PXE',
-  CONTAINER = 'Container',
-  URL = 'URL',
-  IMPORT = 'Import',
-  CLONED_DISK = 'Cloned Disk', // PVC or upload image to PVC
-  UNKNOWN = 'Unknown',
-}
+export type V1NetworkInterface = {
+  name?: string;
+  model?: string;
+  macAddress?: string;
+  bootOrder?: number;
+  bridge?: {};
+  masquerade?: {};
+  sriov?: {};
+  slirp?: {};
+};
+
+export type V1Network = {
+  name?: string;
+  multus?: {
+    networkName: string;
+  };
+  pod?: {};
+  genie?: {};
+};

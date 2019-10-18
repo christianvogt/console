@@ -1,9 +1,9 @@
 import { JSONSchema6 } from 'json-schema';
+import { BadgeType } from '@console/shared';
 import { EventInvolvedObject } from './event';
 
 export * from './job';
 export * from './k8s';
-export * from './node';
 export * from './pods';
 export * from './resource';
 export * from './service-catalog';
@@ -36,16 +36,28 @@ export type ObjectReference = {
 };
 
 export type ObjectMetadata = {
-  name?: string;
-  generateName?: string;
-  uid?: string;
-  annotations?: {[key: string]: string},
-  namespace?: string,
-  labels?: {[key: string]: string},
-  ownerReferences?: OwnerReference[],
-  deletionTimestamp?: string;
+  annotations?: { [key: string]: string };
+  clusterName?: string;
   creationTimestamp?: string;
-  [key: string]: any,
+  deletionGracePeriodSeconds?: number;
+  deletionTimestamp?: string;
+  finalizers?: string[];
+  generateName?: string;
+  generation?: number;
+  labels?: { [key: string]: string };
+  managedFields?: any[];
+  name?: string;
+  namespace?: string;
+  ownerReferences?: OwnerReference[];
+  resourceVersion?: string;
+  selfLink?: string;
+  uid?: string;
+};
+
+export type PartialObjectMetadata = {
+  apiVersion: string;
+  kind: string;
+  metadata: ObjectMetadata;
 };
 
 export enum K8sResourceConditionStatus {
@@ -62,10 +74,13 @@ export type K8sResourceCondition<T> = {
   message: string;
 };
 
-export type MatchExpression = {key: string, operator: 'Exists' | 'DoesNotExist'} | {key: string, operator: 'In' | 'NotIn' | 'Equals' | 'NotEquals', values: string[]};
+export type MatchExpression =
+  | { key: string; operator: 'Exists' | 'DoesNotExist' }
+  | { key: string; operator: 'In' | 'NotIn' | 'Equals' | 'NotEquals'; values: string[] };
 
 export type Selector = {
-  matchLabels?: {[key: string]: string};
+  [key: string]: any;
+  matchLabels?: { [key: string]: string };
   matchExpressions?: MatchExpression[];
 };
 
@@ -90,13 +105,14 @@ export type K8sResourceKind = {
   apiVersion?: string;
   kind?: string;
   metadata?: ObjectMetadata;
+  pipelineTaskName?: string;
   spec?: {
     selector?: Selector;
-    [key: string]: any
+    [key: string]: any;
   };
-  status?: {[key: string]: any};
-  type?: {[key: string]: any};
-  data?: {[key: string]: any};
+  status?: { [key: string]: any };
+  type?: { [key: string]: any };
+  data?: { [key: string]: any };
 };
 
 export type VolumeMount = {
@@ -253,7 +269,19 @@ export type PodSpec = {
   [key: string]: any;
 };
 
-type PodPhase = 'Pending' | 'Running' | 'Succeeded' | 'Failed' | 'Unknown';
+type PodPhase =
+  | 'Pending'
+  | 'Running'
+  | 'Succeeded'
+  | 'Failed'
+  | 'Empty'
+  | 'Warning'
+  | 'Unknown'
+  | 'Idle'
+  | 'Not Ready'
+  | 'Scaled to 0'
+  | 'Autoscaled to 0'
+  | 'Terminating';
 
 type ContainerStateValue = {
   reason?: string;
@@ -284,7 +312,7 @@ export type PodCondition = {
   message?: string;
   lastTransitionTime?: string;
   lastProbeTime?: string;
-}
+};
 
 export type PodStatus = {
   phase: PodPhase;
@@ -303,7 +331,8 @@ export type PodTemplate = {
 
 export type PodKind = {
   status: PodStatus;
-} & PodTemplate & K8sResourceKind;
+} & PodTemplate &
+  K8sResourceKind;
 
 export type StorageClassResourceKind = {
   provisioner: string;
@@ -321,8 +350,8 @@ export type ConfigMapKind = {
   apiVersion: string;
   kind: string;
   metadata: ObjectMetadata;
-  data: {[key: string]: string};
-  binaryData: {[key: string]: string};
+  data: { [key: string]: string };
+  binaryData: { [key: string]: string };
 };
 
 export type CustomResourceDefinitionKind = {
@@ -340,8 +369,49 @@ export type CustomResourceDefinitionKind = {
     validation?: {
       // NOTE: Actually a subset of JSONSchema, but using this type for convenience
       openAPIV3Schema: JSONSchema6;
-    }
-  }
+    };
+  };
+} & K8sResourceKind;
+
+export type RouteTarget = {
+  kind: 'Service';
+  name: string;
+  weight: number;
+};
+
+export type RouteTLS = {
+  caCertificate?: string;
+  certificate?: string;
+  destinationCACertificate?: string;
+  insecureEdgeTerminationPolicy?: string;
+  key?: string;
+  termination: string;
+};
+
+export type RouteIngress = {
+  conditions: any[];
+  host?: string;
+  routerCanonicalHostname?: string;
+  routerName?: string;
+  wildcardPolicy?: string;
+};
+
+export type RouteKind = {
+  spec: {
+    alternateBackends?: RouteTarget[];
+    host?: string;
+    path?: string;
+    port?: {
+      targetPort: number | string;
+    };
+    subdomain?: string;
+    tls?: RouteTLS;
+    to: RouteTarget;
+    wildcardPolicy?: string;
+  };
+  status?: {
+    ingress: RouteIngress[];
+  };
 } & K8sResourceKind;
 
 export type TemplateParameter = {
@@ -435,13 +505,15 @@ export type Patch = {
   value?: any;
 };
 
-export type RollingUpdate = {maxUnavailable?: number | string, maxSurge?: number | string};
-export type DeploymentUpdateStrategy = {
-  type: 'Recreate';
-} | {
-  type: 'RollingUpdate';
-  rollingUpdate: RollingUpdate;
-};
+export type RollingUpdate = { maxUnavailable?: number | string; maxSurge?: number | string };
+export type DeploymentUpdateStrategy =
+  | {
+      type: 'Recreate';
+    }
+  | {
+      type: 'RollingUpdate';
+      rollingUpdate: RollingUpdate;
+    };
 
 export type MachineDeploymentKind = {
   spec: {
@@ -480,7 +552,7 @@ export type MachineConfigPoolCondition = K8sResourceCondition<MachineConfigPoolC
 
 export type MachineConfigPoolStatus = {
   observedGeneration?: number;
-  configuration:{
+  configuration: {
     name: string;
     source: ObjectReference[];
   };
@@ -568,7 +640,16 @@ export type ClusterOperator = {
 
 export type MappingMethodType = 'claim' | 'lookup' | 'add';
 
-type IdentityProviderType = 'BasicAuth' | 'GitHub' | 'GitLab' | 'Google' | 'HTPasswd' | 'Keystone' | 'LDAP' | 'OpenID' | 'RequestHeader';
+type IdentityProviderType =
+  | 'BasicAuth'
+  | 'GitHub'
+  | 'GitLab'
+  | 'Google'
+  | 'HTPasswd'
+  | 'Keystone'
+  | 'LDAP'
+  | 'OpenID'
+  | 'RequestHeader';
 
 type IdentityProviderConfig = {
   [key: string]: any;
@@ -603,15 +684,23 @@ export type OAuthKind = {
   };
 } & K8sResourceKind;
 
-export type K8sVerb = 'create' | 'get' | 'list' | 'update' | 'patch' | 'delete' | 'deletecollection' | 'watch';
+export type K8sVerb =
+  | 'create'
+  | 'get'
+  | 'list'
+  | 'update'
+  | 'patch'
+  | 'delete'
+  | 'deletecollection'
+  | 'watch';
 
 export type AccessReviewResourceAttributes = {
-    group?: string;
-    resource?: string;
-    subresource?: string;
-    verb?: K8sVerb;
-    name?: string;
-    namespace?: string;
+  group?: string;
+  resource?: string;
+  subresource?: string;
+  verb?: K8sVerb;
+  name?: string;
+  namespace?: string;
 };
 
 export type SelfSubjectAccessReviewKind = {
@@ -640,6 +729,15 @@ export type ResourceAccessReviewResponse = {
   groups: string[];
 } & K8sResourceKind;
 
+export type UserKind = {
+  fullName?: string;
+  identities: string[];
+} & K8sResourceKind;
+
+export type GroupKind = {
+  users: string[];
+} & K8sResourceKind;
+
 export type K8sKind = {
   abbr: string;
   kind: string;
@@ -654,10 +752,11 @@ export type K8sKind = {
   apiGroup?: string;
   namespaced?: boolean;
   selector?: Selector;
-  labels?: {[key: string]: string};
-  annotations?: {[key: string]: string};
+  labels?: { [key: string]: string };
+  annotations?: { [key: string]: string };
   verbs?: K8sVerb[];
   shortNames?: string[];
+  badge?: BadgeType;
 };
 
 export type Cause = {
@@ -704,5 +803,5 @@ export type EventKind = K8sResourceKind & {
   source: {
     component: string;
     host?: string;
-  }
+  };
 };

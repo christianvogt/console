@@ -1,2 +1,3 @@
 export * from './constants';
-export * from './nic';
+export * from './network';
+export * from './storage';

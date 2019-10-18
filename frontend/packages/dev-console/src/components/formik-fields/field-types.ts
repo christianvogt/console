@@ -3,9 +3,10 @@ import { TextInputTypes } from '@patternfly/react-core';
 export interface FieldProps {
   name: string;
   label?: string;
-  helpText?: string;
+  helpText?: React.ReactNode;
   required?: boolean;
   style?: React.CSSProperties;
+  isReadOnly?: boolean;
 }
 
 export interface InputFieldProps extends FieldProps {

@@ -4,15 +4,29 @@ import { Helmet } from 'react-helmet';
 import { ActionGroup, Button } from '@patternfly/react-core';
 
 import { connectToPlural } from '../../kinds';
-import { ContainerSpec, k8sCreate, k8sGet, K8sKind, k8sPatch, referenceFor } from '../../module/k8s';
-import { ButtonBar, history, ListDropdown, LoadingBox, ResourceLink, resourceObjPath } from '../utils';
+import {
+  ContainerSpec,
+  k8sCreate,
+  k8sGet,
+  K8sKind,
+  k8sPatch,
+  referenceFor,
+} from '../../module/k8s';
+import {
+  ButtonBar,
+  history,
+  ListDropdown,
+  LoadingBox,
+  ResourceLink,
+  resourceObjPath,
+} from '../utils';
 import { Checkbox } from '../checkbox';
 import { RadioInput } from '../radio';
 import { CreatePVCForm } from './create-pvc';
 import { PersistentVolumeClaimModel } from '../../models';
 import { ContainerSelector } from '../container-selector';
 
-const PVCDropdown: React.FC<PVCDropdownProps> = props => {
+const PVCDropdown: React.FC<PVCDropdownProps> = (props) => {
   const kind = 'PersistentVolumeClaim';
   const { namespace, selectedKey } = props;
   const resources = [{ kind, namespace }];
@@ -58,13 +72,10 @@ export const AttachStorageForm: React.FC<AttachStorageFormProps> = (props) => {
     k8sGet(kindObj, resourceName, namespace).then(setObj);
   }, [kindObj, resourceName, namespace]);
 
-  if (!kindObj || !_.includes(supportedKinds, kindObj.kind)) {
-    setError('Unsupported kind.');
-    return;
-  }
-
-  const updateVolumeName = (newClaimName: string) => {
-    // Check if there is already a volume for this PVC.
+  React.useEffect(() => {
+    // If the PVC or its name changes, check if there is already a volume with that name
+    const newClaimName =
+      showCreatePVC === 'existing' ? claimName : _.get(newPVCObj, 'metadata.name', '');
     const volumes = _.get(obj, 'spec.template.spec.volumes');
     const volume = _.find(volumes, {
       persistentVolumeClaim: {
@@ -76,9 +87,14 @@ export const AttachStorageForm: React.FC<AttachStorageFormProps> = (props) => {
     const newVolumeAlreadyMounted = !!volume;
     setVolumeName(newVolumeName);
     setVolumeAlreadyMounted(newVolumeAlreadyMounted);
-  };
+  }, [newPVCObj, obj, claimName, showCreatePVC]);
 
-  const handleShowCreatePVCChange: React.ReactEventHandler<HTMLInputElement> = event => {
+  if (!kindObj || !_.includes(supportedKinds, kindObj.kind)) {
+    setError('Unsupported kind.');
+    return;
+  }
+
+  const handleShowCreatePVCChange: React.ReactEventHandler<HTMLInputElement> = (event) => {
     setShowCreatePVC(event.currentTarget.value);
   };
 
@@ -89,7 +105,9 @@ export const AttachStorageForm: React.FC<AttachStorageFormProps> = (props) => {
 
   const handleContainerSelectionChange = (checked, event) => {
     const checkedItems = [...selectedContainers];
-    checked ? checkedItems.push(event.currentTarget.id) : _.pull(checkedItems, event.currentTarget.id);
+    checked
+      ? checkedItems.push(event.currentTarget.id)
+      : _.pull(checkedItems, event.currentTarget.id);
     setSelectedContainers(checkedItems);
   };
 
@@ -110,26 +128,22 @@ export const AttachStorageForm: React.FC<AttachStorageFormProps> = (props) => {
 
   const validateMountPaths = (path: string) => {
     const existingMountPaths = getMountPaths(obj.spec.template);
-    const err =
-      existingMountPaths.includes(path)
-        ? 'Mount path is already in use.'
-        : '';
+    const err = existingMountPaths.includes(path) ? 'Mount path is already in use.' : '';
     setError(err);
   };
 
   // Add logic to check this handler for if a mount path is not unique
-  const handleMountPathChange: React.ReactEventHandler<HTMLInputElement> = event => {
+  const handleMountPathChange: React.ReactEventHandler<HTMLInputElement> = (event) => {
     setMountPath(event.currentTarget.value);
     // Look at the existing mount paths so that we can warn if the new value is not unique.
     validateMountPaths(event.currentTarget.value);
   };
 
-  const handleSubPathChange: React.ReactEventHandler<HTMLInputElement> = event => {
+  const handleSubPathChange: React.ReactEventHandler<HTMLInputElement> = (event) => {
     setSubPath(event.currentTarget.value);
   };
 
   const handlePVCChange = (newClaimName: string) => {
-    updateVolumeName(newClaimName);
     setClaimName(newClaimName);
   };
 
@@ -139,7 +153,7 @@ export const AttachStorageForm: React.FC<AttachStorageFormProps> = (props) => {
 
   const createPVCIfNecessary = () => {
     return showCreatePVC === 'new'
-      ? k8sCreate(PersistentVolumeClaimModel, newPVCObj).then(claim => claim.metadata.name)
+      ? k8sCreate(PersistentVolumeClaimModel, newPVCObj).then((claim) => claim.metadata.name)
       : Promise.resolve(claimName);
   };
 
@@ -156,9 +170,17 @@ export const AttachStorageForm: React.FC<AttachStorageFormProps> = (props) => {
       // Only add to selected containers
       if (isContainerSelected(container)) {
         if (_.isEmpty(container.volumeMounts)) {
-          patch.push({op: 'add', path: `/spec/template/spec/containers/${i}/volumeMounts`, value: [mount]});
+          patch.push({
+            op: 'add',
+            path: `/spec/template/spec/containers/${i}/volumeMounts`,
+            value: [mount],
+          });
         } else {
-          patch.push({op: 'add', path: `/spec/template/spec/containers/${i}/volumeMounts/-`, value: mount});
+          patch.push({
+            op: 'add',
+            path: `/spec/template/spec/containers/${i}/volumeMounts/-`,
+            value: mount,
+          });
         }
       }
       return patch;
@@ -173,9 +195,9 @@ export const AttachStorageForm: React.FC<AttachStorageFormProps> = (props) => {
     if (!volumeAlreadyMounted) {
       const existingVolumes = _.get(obj, 'spec.template.spec.volumes');
       const volumePatch = _.isEmpty(existingVolumes)
-        ? {op: 'add', path: '/spec/template/spec/volumes', value: [volume]}
-        : {op: 'add', path: '/spec/template/spec/volumes/-', value: volume};
-      return [ ...patches, volumePatch ];
+        ? { op: 'add', path: '/spec/template/spec/volumes', value: [volume] }
+        : { op: 'add', path: '/spec/template/spec/volumes/-', value: volume };
+      return [...patches, volumePatch];
     }
     return patches;
   };
@@ -187,23 +209,19 @@ export const AttachStorageForm: React.FC<AttachStorageFormProps> = (props) => {
       return;
     }
     setInProgress(true);
-    createPVCIfNecessary().then((pvClaimName: string) => {
-      return k8sPatch(kindObj, obj, getVolumePatches(pvClaimName)).then(
-        resource => {
+    createPVCIfNecessary().then(
+      (pvClaimName: string) => {
+        return k8sPatch(kindObj, obj, getVolumePatches(pvClaimName)).then((resource) => {
           setInProgress(false);
           history.push(resourceObjPath(resource, referenceFor(resource)));
         });
-    }, err => {
-      setError(err.message);
-      setInProgress(false);
-    });
+      },
+      (err) => {
+        setError(err.message);
+        setInProgress(false);
+      },
+    );
   };
-
-  const onPVCChange = newPVC => {
-    setNewPVCObj(newPVC);
-    updateVolumeName(_.get(newPVC, 'metadata.name', ''));
-  };
-
 
   const title = 'Add Storage';
   return (
@@ -211,19 +229,15 @@ export const AttachStorageForm: React.FC<AttachStorageFormProps> = (props) => {
       <Helmet>
         <title>{title}</title>
       </Helmet>
-      <form
-        className="co-m-pane__body-group co-m-pane__form"
-        onSubmit={save}
-      >
+      <form className="co-m-pane__body-group co-m-pane__form" onSubmit={save}>
         <h1 className="co-m-pane__heading">{title}</h1>
         {kindObj && (
           <div className="co-m-pane__explanation">
-            Add a persistent volume claim to <ResourceLink inline kind={kindObj.kind} name={resourceName} namespace={namespace} />
+            Add a persistent volume claim to{' '}
+            <ResourceLink inline kind={kindObj.kind} name={resourceName} namespace={namespace} />
           </div>
         )}
-        <label className="control-label co-required" >
-          Persistent Volume Claim
-        </label>
+        <label className="control-label co-required">Persistent Volume Claim</label>
         <div className="form-group">
           <RadioInput
             title="Use existing claim"
@@ -235,7 +249,7 @@ export const AttachStorageForm: React.FC<AttachStorageFormProps> = (props) => {
           />
         </div>
 
-        {showCreatePVC === 'existing' &&
+        {showCreatePVC === 'existing' && (
           <div className="form-group co-form-subsection">
             <PVCDropdown
               namespace={namespace}
@@ -244,7 +258,7 @@ export const AttachStorageForm: React.FC<AttachStorageFormProps> = (props) => {
               selectedKey={claimName}
             />
           </div>
-        }
+        )}
         <div className="form-group">
           <RadioInput
             title="Create new claim"
@@ -256,7 +270,11 @@ export const AttachStorageForm: React.FC<AttachStorageFormProps> = (props) => {
           />
         </div>
 
-        {showCreatePVC === 'new' && <div className="co-form-subsection"><CreatePVCForm onChange={onPVCChange} namespace={namespace} /></div>}
+        {showCreatePVC === 'new' && (
+          <div className="co-form-subsection">
+            <CreatePVCForm onChange={setNewPVCObj} namespace={namespace} />
+          </div>
+        )}
 
         <div className="form-group">
           <label className="control-label co-required" htmlFor="mount-path">
@@ -299,32 +317,42 @@ export const AttachStorageForm: React.FC<AttachStorageFormProps> = (props) => {
               value={subPath}
             />
             <p className="help-block" id="subpath-help">
-              Optional path within the volume from which it will be mounted
-              into the container. Defaults to the root of volume.
+              Optional path within the volume from which it will be mounted into the container.
+              Defaults to the root of volume.
             </p>
           </div>
         </div>
-        {!useContainerSelector && <p>The volume will be mounted into all containers. You can
-          <button type="button" className="btn btn-link .btn-link--no-btn-default-values" onClick={handleSelectContainers}>select specific containers</button>instead.
-        </p>}
-        {useContainerSelector && <div className="form-group">
-          <label className="control-label">Containers</label>
-          <button type="button" className="btn btn-link .btn-link--no-btn-default-values" onClick={handleSelectContainers}>(use all containers)</button>
-          <ContainerSelector containers={obj.spec.template.spec.containers} selected={selectedContainers} onChange={handleContainerSelectionChange} />
-          <p className="help-block" id="subpath-help">
-            Select which containers to mount volume into.
+        {!useContainerSelector && (
+          <p>
+            The volume will be mounted into all containers. You can
+            <Button type="button" onClick={handleSelectContainers} variant="link">
+              select specific containers
+            </Button>
+            instead.
           </p>
-        </div>}
+        )}
+        {useContainerSelector && (
+          <div className="form-group">
+            <label className="control-label">Containers</label>
+            <Button type="button" onClick={handleSelectContainers} variant="link">
+              (use all containers)
+            </Button>
+            <ContainerSelector
+              containers={obj.spec.template.spec.containers}
+              selected={selectedContainers}
+              onChange={handleContainerSelectionChange}
+            />
+            <p className="help-block" id="subpath-help">
+              Select which containers to mount volume into.
+            </p>
+          </div>
+        )}
         <ButtonBar errorMessage={error} inProgress={inProgress}>
           <ActionGroup className="pf-c-form">
             <Button type="submit" variant="primary" id="save-changes">
               Save
             </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={history.goBack}
-            >
+            <Button type="button" variant="secondary" onClick={history.goBack}>
               Cancel
             </Button>
           </ActionGroup>
@@ -339,13 +367,7 @@ const AttachStorage_ = ({ kindObj, kindsInFlight, match: { params } }) => {
     return <LoadingBox />;
   }
 
-  return (
-    <AttachStorageForm
-      namespace={params.ns}
-      resourceName={params.name}
-      kindObj={kindObj}
-    />
-  );
+  return <AttachStorageForm namespace={params.ns} resourceName={params.name} kindObj={kindObj} />;
 };
 export const AttachStorage = connectToPlural(AttachStorage_);
 

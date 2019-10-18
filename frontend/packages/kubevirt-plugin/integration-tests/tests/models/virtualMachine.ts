@@ -12,12 +12,14 @@ import { VMConfig } from '../utils/types';
 import {
   PAGE_LOAD_TIMEOUT_SECS,
   VM_BOOTUP_TIMEOUT_SECS,
+  VM_MIGRATION_TIMEOUT_SECS,
   WIZARD_CREATE_VM_ERROR,
   WIZARD_TABLE_FIRST_ROW,
   TABS,
-  DASH,
+  VM_IMPORT_TIMEOUT_SECS,
+  VM_ACTIONS,
 } from '../utils/consts';
-import { detailViewAction } from '../../views/vm.actions.view';
+import { detailViewAction, listViewAction } from '../../views/vm.actions.view';
 import { tableRowForName } from '../../views/kubevirtDetailView.view';
 import { Wizard } from './wizard';
 import { KubevirtDetailView } from './kubevirtDetailView';
@@ -43,7 +45,7 @@ export class VirtualMachine extends KubevirtDetailView {
     await this.navigateToTab(TABS.OVERVIEW);
 
     let confirmDialog = true;
-    if (['Clone'].includes(action)) {
+    if ([VM_ACTIONS.CLONE].includes(action)) {
       confirmDialog = false;
     }
 
@@ -53,12 +55,21 @@ export class VirtualMachine extends KubevirtDetailView {
     }
   }
 
+  async listViewAction(action: string) {
+    await this.navigateToListView();
+
+    let confirmDialog = true;
+    if ([VM_ACTIONS.CLONE].includes(action)) {
+      confirmDialog = false;
+    }
+
+    await listViewAction(this.name)(action, confirmDialog);
+  }
+
   async waitForMigrationComplete(fromNode: string, timeout: number) {
+    await vmView.waitForStatusIcon(vmView.statusIcons.running, VM_MIGRATION_TIMEOUT_SECS);
     await browser.wait(
-      until.and(
-        waitForStringNotInElement(vmView.vmDetailNode(this.namespace, this.name), fromNode),
-        waitForStringNotInElement(vmView.vmDetailNode(this.namespace, this.name), DASH),
-      ),
+      waitForStringNotInElement(vmView.vmDetailNode(this.namespace, this.name), fromNode),
       timeout,
     );
   }
@@ -127,12 +138,7 @@ export class VirtualMachine extends KubevirtDetailView {
 
     // Networking
     for (const resource of networkResources) {
-      await wizard.addNIC(
-        resource.name,
-        resource.mac,
-        resource.networkDefinition,
-        resource.binding,
-      );
+      await wizard.addNIC(resource);
     }
     await wizard.next();
 
@@ -160,9 +166,13 @@ export class VirtualMachine extends KubevirtDetailView {
     }
     await wizard.next();
 
+    await this.navigateToTab(TABS.OVERVIEW);
     if (startOnCreation === true) {
       // If startOnCreation is true, wait for VM to boot up
       await vmView.waitForStatusIcon(vmView.statusIcons.running, VM_BOOTUP_TIMEOUT_SECS);
+    } else {
+      // Else wait for possible import to finish
+      await vmView.waitForStatusIcon(vmView.statusIcons.off, VM_IMPORT_TIMEOUT_SECS);
     }
   }
 }

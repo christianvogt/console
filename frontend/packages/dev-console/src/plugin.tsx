@@ -103,7 +103,7 @@ const plugin: Plugin<ConsumedExtensions> = [
       section: 'Advanced',
       perspective: 'dev',
       componentProps: {
-        name: 'Projects',
+        name: 'Project Details',
         resource: 'projects',
         required: FLAGS.OPENSHIFT,
         testID: 'advanced-project-header',
@@ -119,6 +119,19 @@ const plugin: Plugin<ConsumedExtensions> = [
         name: 'Events',
         resource: 'events',
         testID: 'advanced-events-header',
+      },
+    },
+  },
+  {
+    type: 'NavItem/Href',
+    properties: {
+      section: 'Advanced',
+      perspective: 'dev',
+      componentProps: {
+        name: 'Metrics',
+        href: '/metrics',
+        required: FLAGS.OPENSHIFT,
+        testID: 'metrics-header',
       },
     },
   },
@@ -155,6 +168,16 @@ const plugin: Plugin<ConsumedExtensions> = [
     },
   },
   {
+    type: 'Page/Resource/List',
+    properties: {
+      model: PipelineRunModel,
+      loader: async () =>
+        (await import(
+          './components/pipelineruns/PipelineRunResourceList' /* webpackChunkName: "pipelinerun-list" */
+        )).default,
+    },
+  },
+  {
     type: 'Page/Resource/Details',
     properties: {
       model: PipelineRunModel,
@@ -179,7 +202,7 @@ const plugin: Plugin<ConsumedExtensions> = [
     type: 'Page/Route',
     properties: {
       exact: true,
-      path: ['/add', '/import', '/topology', '/deploy-image'],
+      path: ['/add', '/import', '/topology', '/deploy-image', '/metrics'],
       component: NamespaceRedirect,
     },
   },
@@ -246,6 +269,39 @@ const plugin: Plugin<ConsumedExtensions> = [
         (await import(
           './components/import/DeployImagePage' /* webpackChunkName: "dev-console-deployImage" */
         )).default,
+    },
+  },
+  {
+    type: 'Page/Route',
+    properties: {
+      perspective: 'dev',
+      exact: true,
+      path: ['/k8s/cluster/projects'],
+      loader: async () =>
+        (await import(
+          './components/projects/details/AllProjectsDetailList' /* webpackChunkName: "all-projects-detail-list" */
+        )).default,
+    },
+  },
+  {
+    type: 'Page/Route',
+    properties: {
+      perspective: 'dev',
+      path: ['/k8s/cluster/projects/:ns'],
+      loader: async () =>
+        (await import(
+          './components/projects/details/ProjectDetailsPage' /* webpackChunkName: "project-details" */
+        )).default,
+    },
+  },
+  {
+    type: 'Page/Route',
+    properties: {
+      exact: true,
+      path: ['/metrics/all-namespaces', '/metrics/ns/:ns'],
+      loader: async () =>
+        (await import('./components/MetricsPage' /* webpackChunkName: "dev-console-metrics" */))
+          .default,
     },
   },
   {

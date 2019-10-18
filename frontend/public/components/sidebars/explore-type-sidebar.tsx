@@ -1,8 +1,15 @@
 import * as React from 'react';
 import * as _ from 'lodash-es';
-import { Breadcrumb, BreadcrumbItem } from '@patternfly/react-core';
+import { Breadcrumb, BreadcrumbItem, Button } from '@patternfly/react-core';
 
-import { getDefinitionKey, getStoredSwagger, K8sKind, SwaggerDefinition, SwaggerDefinitions } from '../../module/k8s';
+import {
+  getDefinitionKey,
+  getStoredSwagger,
+  getSwaggerPath,
+  K8sKind,
+  SwaggerDefinition,
+  SwaggerDefinitions,
+} from '../../module/k8s';
 import { CamelCaseWrap, EmptyBox, LinkifyExternal } from '../utils';
 
 const getRef = (definition: SwaggerDefinition): string => {
@@ -17,7 +24,7 @@ export const ExploreType: React.FC<ExploreTypeProps> = (props) => {
   // entry contains the name, description, and path to the definition in the
   // OpenAPI document.
   const [drilldownHistory, setDrilldownHistory] = React.useState([]);
-  const {kindObj} = props;
+  const { kindObj } = props;
   if (!kindObj) {
     return null;
   }
@@ -28,15 +35,26 @@ export const ExploreType: React.FC<ExploreTypeProps> = (props) => {
   }
   const currentSelection = _.last(drilldownHistory);
   // Show the current selected property or the top-level definition for the kind.
-  const currentPath = currentSelection ? currentSelection.path : [getDefinitionKey(kindObj, allDefinitions)];
+  const currentPath = currentSelection
+    ? currentSelection.path
+    : [getDefinitionKey(kindObj, allDefinitions)];
   const currentDefinition: SwaggerDefinition = _.get(allDefinitions, currentPath) || {};
 
   // Prefer the description saved in `currentSelection`. It won't always be defined in the definition itself.
-  const description = currentSelection ? currentSelection.description : currentDefinition.description;
+  const description = currentSelection
+    ? currentSelection.description
+    : currentDefinition.description;
   const required = new Set(currentDefinition.required || []);
-  const breadcrumbs = drilldownHistory.length ? [kindObj.kind, ..._.map(drilldownHistory, 'name')] : [];
+  const breadcrumbs = drilldownHistory.length
+    ? [kindObj.kind, ..._.map(drilldownHistory, 'name')]
+    : [];
 
-  const drilldown = (e: React.MouseEvent<HTMLButtonElement>, name: string, desc: string, path: string[]) => {
+  const drilldown = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    name: string,
+    desc: string,
+    path: string[],
+  ) => {
     e.preventDefault();
     setDrilldownHistory([...drilldownHistory, { name, description: desc, path }]);
     if (props.scrollTop) {
@@ -54,45 +72,53 @@ export const ExploreType: React.FC<ExploreTypeProps> = (props) => {
   // - A reference to another top-level definition
   // - Inline property declartions
   // - Inline property declartions for array items
-  const getDrilldownPath = (definition: SwaggerDefinition, name: string): string[] => {
-    const ref = getRef(definition);
+  const getDrilldownPath = (name: string): string[] => {
+    const path = getSwaggerPath(allDefinitions, currentPath, name, true);
     // Only allow drilldown if the reference has additional properties to explore.
-    if (ref && (_.get(allDefinitions, [ref, 'properties']) || _.get(allDefinitions, [ref, 'items']))) {
-      return [ref];
-    }
-
-    if (definition.properties) {
-      return [...currentPath, 'properties', name];
-    }
-
-    if (_.get(definition, 'items.properties')) {
-      return [...currentPath, 'properties', name, 'items'];
-    }
-
-    return null;
+    const child = _.get(allDefinitions, path) as SwaggerDefinition;
+    return _.has(child, 'properties') || _.has(child, 'items.properties') ? path : null;
   };
 
   // Get the type to display for a property reference.
-  const getTypeForRef = (ref: string): string => _.get(allDefinitions, [ref, 'format']) || _.get(allDefinitions, [ref, 'type']);
+  const getTypeForRef = (ref: string): string =>
+    _.get(allDefinitions, [ref, 'format']) || _.get(allDefinitions, [ref, 'type']);
 
   return (
     <React.Fragment>
-      {!_.isEmpty(breadcrumbs) && <Breadcrumb className="pf-c-breadcrumb--no-padding-top">
-        {breadcrumbs.map((crumb, i) => {
-          const isLast = i === breadcrumbs.length - 1;
-          return <BreadcrumbItem key={i} isActive={isLast}>
-            {isLast
-              ? crumb
-              : <button type="button" className="btn btn-link btn-link--no-btn-default-values" onClick={e => breadcrumbClicked(e, i)}>{crumb}</button>}
-          </BreadcrumbItem>;
-        })}
-      </Breadcrumb>}
-      {description && <p className="co-break-word co-pre-line"><LinkifyExternal>{description}</LinkifyExternal></p>}
-      {_.isEmpty(currentDefinition.properties)
-        ? <EmptyBox label="Properties" />
-        : <ul className="co-resource-sidebar-list">
+      {!_.isEmpty(breadcrumbs) && (
+        <Breadcrumb className="pf-c-breadcrumb--no-padding-top">
+          {breadcrumbs.map((crumb, i) => {
+            const isLast = i === breadcrumbs.length - 1;
+            return (
+              <BreadcrumbItem key={i} isActive={isLast}>
+                {isLast ? (
+                  crumb
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={(e) => breadcrumbClicked(e, i)}
+                    isInline
+                    variant="link"
+                  >
+                    {crumb}
+                  </Button>
+                )}
+              </BreadcrumbItem>
+            );
+          })}
+        </Breadcrumb>
+      )}
+      {description && (
+        <p className="co-break-word co-pre-line">
+          <LinkifyExternal>{description}</LinkifyExternal>
+        </p>
+      )}
+      {_.isEmpty(currentDefinition.properties) ? (
+        <EmptyBox label="Properties" />
+      ) : (
+        <ul className="co-resource-sidebar-list">
           {_.map(currentDefinition.properties, (definition: SwaggerDefinition, name: string) => {
-            const path = getDrilldownPath(definition, name);
+            const path = getDrilldownPath(name);
             const definitionType = definition.type || getTypeForRef(getRef(definition));
             return (
               <li key={name} className="co-resource-sidebar-item">
@@ -104,13 +130,26 @@ export const ExploreType: React.FC<ExploreTypeProps> = (props) => {
                     {required.has(name) && <React.Fragment> &ndash; required</React.Fragment>}
                   </small>
                 </h5>
-                {definition.description && <p className="co-break-word co-pre-line"><LinkifyExternal>{definition.description}</LinkifyExternal></p>}
-                {path && <button type="button" className="btn btn-link btn-link--no-btn-default-values" onClick={e => drilldown(e, name, definition.description, path)}>View Details</button>}
+                {definition.description && (
+                  <p className="co-break-word co-pre-line">
+                    <LinkifyExternal>{definition.description}</LinkifyExternal>
+                  </p>
+                )}
+                {path && (
+                  <Button
+                    type="button"
+                    onClick={(e) => drilldown(e, name, definition.description, path)}
+                    isInline
+                    variant="link"
+                  >
+                    View Details
+                  </Button>
+                )}
               </li>
             );
           })}
         </ul>
-      }
+      )}
     </React.Fragment>
   );
 };

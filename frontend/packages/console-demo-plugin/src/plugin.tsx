@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as _ from 'lodash';
 import {
   Plugin,
   ModelDefinition,
@@ -20,19 +21,21 @@ import {
   DashboardsOverviewQuery,
   DashboardsOverviewUtilizationItem,
   DashboardsOverviewTopConsumerItem,
+  DashboardsOverviewResourceActivity,
+  DashboardsOverviewPrometheusActivity,
 } from '@console/plugin-sdk';
 // TODO(vojtech): internal code needed by plugins should be moved to console-shared package
 import { PodModel, RouteModel, NodeModel } from '@console/internal/models';
 import { FLAGS } from '@console/internal/const';
-import { GridPosition } from '@console/internal/components/dashboard/grid';
+import { GridPosition } from '@console/shared/src/components/dashboard/DashboardGrid';
 import { humanizeBinaryBytesWithoutB } from '@console/internal/components/utils/units';
-import { OverviewQuery } from '@console/internal/components/dashboards-page/overview-dashboard/queries';
-import { MetricType } from '@console/internal/components/dashboard/top-consumers-card/metric-type';
+import { OverviewQuery } from '@console/internal/components/dashboard/dashboards-page/overview-dashboard/queries';
+import { MetricType } from '@console/shared/src/components/dashboard/top-consumers-card/metric-type';
 import { FooBarModel } from './models';
 import { yamlTemplates } from './yaml-templates';
 import TestIcon from './components/test-icon';
-import { getFooHealthState, getBarHealthState } from './dashboards/health';
-import { getRouteStatusGroups, DemoGroupIcon } from './dashboards/inventory';
+import { getFooHealthState, getBarHealthState } from './components/dashboards/health';
+import { getRouteStatusGroups, DemoGroupIcon } from './components/dashboards/inventory';
 
 type ConsumedExtensions =
   | ModelDefinition
@@ -46,14 +49,16 @@ type ConsumedExtensions =
   | YAMLTemplate
   | RoutePage
   | DashboardsOverviewHealthPrometheusSubsystem
-  | DashboardsOverviewHealthURLSubsystem<any>
+  | DashboardsOverviewHealthURLSubsystem
   | DashboardsTab
   | DashboardsCard
   | DashboardsOverviewInventoryItem
   | DashboardsInventoryItemGroup
   | DashboardsOverviewQuery
   | DashboardsOverviewUtilizationItem
-  | DashboardsOverviewTopConsumerItem;
+  | DashboardsOverviewTopConsumerItem
+  | DashboardsOverviewResourceActivity
+  | DashboardsOverviewPrometheusActivity;
 
 const plugin: Plugin<ConsumedExtensions> = [
   {
@@ -107,7 +112,7 @@ const plugin: Plugin<ConsumedExtensions> = [
     properties: {
       model: FooBarModel,
       loader: () =>
-        import('./components/test-pages' /* webpackChunkName: "demo-foobars" */).then(
+        import('./components/test-pages' /* webpackChunkName: "demo" */).then(
           (m) => m.DummyResourceListPage,
         ),
     },
@@ -117,7 +122,7 @@ const plugin: Plugin<ConsumedExtensions> = [
     properties: {
       model: FooBarModel,
       loader: () =>
-        import('./components/test-pages' /* webpackChunkName: "demo-foobars" */).then(
+        import('./components/test-pages' /* webpackChunkName: "demo" */).then(
           (m) => m.DummyResourceDetailsPage,
         ),
     },
@@ -153,9 +158,9 @@ const plugin: Plugin<ConsumedExtensions> = [
     type: 'Dashboards/Overview/Health/Prometheus',
     properties: {
       title: 'Bar system',
-      query: 'barQuery',
+      queries: ['barQuery'],
       healthHandler: getBarHealthState,
-      resource: {
+      additionalResource: {
         kind: NodeModel.kind,
         isList: true,
         namespaced: false,
@@ -207,7 +212,9 @@ const plugin: Plugin<ConsumedExtensions> = [
       tab: 'foo-tab',
       position: GridPosition.MAIN,
       loader: () =>
-        import('./dashboards/foo-card' /* webpackChunkName: "demo-card" */).then((m) => m.FooCard),
+        import('./components/dashboards/foo-card' /* webpackChunkName: "demo" */).then(
+          (m) => m.FooCard,
+        ),
       required: 'TEST_MODEL_FLAG',
     },
   },
@@ -237,6 +244,10 @@ const plugin: Plugin<ConsumedExtensions> = [
       },
       model: RouteModel,
       mapper: getRouteStatusGroups,
+      expandedComponent: () =>
+        import(
+          './components/dashboards/inventory' /* webpackChunkName: "demo-inventory-item" */
+        ).then((m) => m.ExpandedRoutes),
       required: 'TEST_MODEL_FLAG',
     },
   },
@@ -269,6 +280,36 @@ const plugin: Plugin<ConsumedExtensions> = [
       },
       mutator: (data) =>
         data.map((datum) => ({ ...datum, x: (datum.x as string).replace('prometheus-', '') })),
+      required: 'TEST_MODEL_FLAG',
+    },
+  },
+  {
+    type: 'Dashboards/Overview/Activity/Resource',
+    properties: {
+      k8sResource: {
+        isList: true,
+        kind: NodeModel.kind,
+        prop: 'nodes',
+      },
+      isActivity: (resource) =>
+        _.get(resource, ['metadata', 'labels', 'node-role.kubernetes.io/master']) === '',
+      getTimestamp: (resource) => new Date(resource.metadata.creationTimestamp),
+      loader: () =>
+        import('./components/dashboards/activity' /* webpackChunkName: "demo" */).then(
+          (m) => m.DemoActivity,
+        ),
+      required: 'TEST_MODEL_FLAG',
+    },
+  },
+  {
+    type: 'Dashboards/Overview/Activity/Prometheus',
+    properties: {
+      queries: ['barQuery'],
+      isActivity: () => true,
+      loader: () =>
+        import('./components/dashboards/activity' /* webpackChunkName: "demo" */).then(
+          (m) => m.DemoPrometheusActivity,
+        ),
       required: 'TEST_MODEL_FLAG',
     },
   },

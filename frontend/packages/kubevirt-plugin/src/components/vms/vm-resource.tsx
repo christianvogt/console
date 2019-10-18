@@ -4,14 +4,13 @@ import {
   getOperatingSystem,
   getWorkloadProfile,
   getVmTemplate,
-  getNodeName,
   VmStatuses,
   BootOrder,
   getBootableDevicesInOrder,
 } from 'kubevirt-web-ui-components';
 import { ResourceSummary, NodeLink, ResourceLink } from '@console/internal/components/utils';
 import { PodKind } from '@console/internal/module/k8s';
-import { getName, getNamespace } from '@console/shared';
+import { getName, getNamespace, getNodeName } from '@console/shared';
 import { PodModel } from '@console/internal/models';
 import { VMKind, VMIKind } from '../../types';
 import { VMTemplateLink } from '../vm-templates/vm-template-link';
@@ -126,7 +125,11 @@ export const VMDetailsList: React.FC<VMResourceListProps> = ({
       </VMDetailsItem>
 
       <VMDetailsItem title="Flavor" idValue={prefixedID(id, 'flavor')} isNotAvail={!flavorText}>
-        <EditButton canEdit={canUpdateVM} onClick={() => vmFlavorModal({ vmLike: vm })}>
+        <EditButton
+          id={prefixedID(id, 'flavor-edit')}
+          canEdit={canUpdateVM}
+          onClick={() => vmFlavorModal({ vmLike: vm })}
+        >
           {flavorText}
         </EditButton>
       </VMDetailsItem>

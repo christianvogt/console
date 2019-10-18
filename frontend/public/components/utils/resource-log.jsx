@@ -2,7 +2,7 @@ import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import { Base64 } from 'js-base64';
 import { saveAs } from 'file-saver';
-import { Alert, AlertActionLink } from '@patternfly/react-core';
+import { Alert, AlertActionLink, Button } from '@patternfly/react-core';
 import * as _ from 'lodash-es';
 import { CompressIcon, ExpandIcon, DownloadIcon } from '@patternfly/react-icons';
 
@@ -12,8 +12,8 @@ import { modelFor, resourceURL } from '../../module/k8s';
 import { WSFactory } from '../../module/ws-factory';
 import { LineBuffer } from './line-buffer';
 import * as screenfull from 'screenfull';
-import { k8sGet } from '@console/internal/module/k8s';
-import { ConsoleExternalLogLinkModel } from '@console/internal/models';
+import { k8sGet, k8sList } from '@console/internal/module/k8s';
+import { ConsoleExternalLogLinkModel, ProjectModel } from '@console/internal/models';
 import { FLAGS } from '../../const';
 import { connectToFlags } from '../../reducers/features';
 
@@ -36,54 +36,96 @@ const streamStatusMessages = {
 };
 
 // Component for log stream controls
-const LogControls = ({dropdown, onDownload, toggleFullscreen, isFullscreen, status, toggleStreaming, resource, containerName, podLogLinks}) => {
-  return <div className="co-toolbar">
-    <div className="co-toolbar__group co-toolbar__group--left">
-      <div className="co-toolbar__item">
-        { status === STREAM_LOADING && <React.Fragment><LoadingInline />&nbsp;</React.Fragment> }
-        { [STREAM_ACTIVE, STREAM_PAUSED].includes(status) && <TogglePlay active={status === STREAM_ACTIVE} onClick={toggleStreaming} />}
-        {streamStatusMessages[status]}
+const LogControls = ({
+  dropdown,
+  onDownload,
+  toggleFullscreen,
+  isFullscreen,
+  status,
+  toggleStreaming,
+  resource,
+  containerName,
+  podLogLinks,
+  namespaceUID,
+}) => {
+  return (
+    <div className="co-toolbar">
+      <div className="co-toolbar__group co-toolbar__group--left">
+        <div className="co-toolbar__item">
+          {status === STREAM_LOADING && (
+            <React.Fragment>
+              <LoadingInline />
+              &nbsp;
+            </React.Fragment>
+          )}
+          {[STREAM_ACTIVE, STREAM_PAUSED].includes(status) && (
+            <TogglePlay active={status === STREAM_ACTIVE} onClick={toggleStreaming} />
+          )}
+          {streamStatusMessages[status]}
+        </div>
+        {dropdown && <div className="co-toolbar__item">{dropdown}</div>}
       </div>
-      {dropdown && <div className="co-toolbar__item">{dropdown}</div>}
-    </div>
-    <div className="co-toolbar__group co-toolbar__group--right">
-      {!_.isEmpty(podLogLinks) && _.map(_.sortBy(podLogLinks, 'metadata.name'), link => {
-        const namespace = resource.metadata.namespace;
-        const namespaceFilter = link.spec.namespaceFilter;
-        if (namespaceFilter) {
-          try {
-            const namespaceRegExp = new RegExp(namespaceFilter, 'g');
-            if (namespace.search(namespaceRegExp)) {
-              return null;
+      <div className="co-toolbar__group co-toolbar__group--right">
+        {!_.isEmpty(podLogLinks) &&
+          _.map(_.sortBy(podLogLinks, 'metadata.name'), (link) => {
+            const namespace = resource.metadata.namespace;
+            const namespaceFilter = link.spec.namespaceFilter;
+            if (namespaceFilter) {
+              try {
+                const namespaceRegExp = new RegExp(namespaceFilter, 'g');
+                if (namespace.search(namespaceRegExp)) {
+                  return null;
+                }
+              } catch (e) {
+                // eslint-disable-next-line no-console
+                console.warn('invalid log link regex', namespaceFilter, e);
+                return null;
+              }
             }
-          } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn('invalid log link regex', namespaceFilter, e);
-            return null;
-          }
-        }
-        const url = link.spec.hrefTemplate
-          .replace('${resourceName}', encodeURIComponent(resource.metadata.name))
-          .replace('${resourceUID}', encodeURIComponent(resource.metadata.uid))
-          .replace('${containerName}', encodeURIComponent(containerName))
-          .replace('${resourceNamespace}', encodeURIComponent(namespace))
-          .replace('${podLabels}', JSON.stringify(resource.metadata.labels));
-        return <React.Fragment key={link.metadata.uid}>
-          <ExternalLink href={url} text={link.spec.text} additionalClassName="co-external-link--within-toolbar btn btn-link" dataTestID={link.metadata.name} />
-          <span aria-hidden="true" className="co-action-divider hidden-xs">|</span>
-        </React.Fragment>;
-      })}
-      <button className="btn btn-link" onClick={onDownload}>
-        <DownloadIcon className="co-icon-space-r" />Download
-      </button>
-      <span aria-hidden="true" className="co-action-divider hidden-xs">|</span>
-      <button className="btn btn-link" onClick={toggleFullscreen}>
-        {isFullscreen
-          ? <React.Fragment><CompressIcon className="co-icon-space-r" />Collapse</React.Fragment>
-          : <React.Fragment><ExpandIcon className="co-icon-space-r" />Expand</React.Fragment>}
-      </button>
+            const url = link.spec.hrefTemplate
+              .replace('${resourceName}', encodeURIComponent(resource.metadata.name))
+              .replace('${resourceUID}', encodeURIComponent(resource.metadata.uid))
+              .replace('${containerName}', encodeURIComponent(containerName))
+              .replace('${resourceNamespace}', encodeURIComponent(namespace))
+              .replace('${resourceNamespaceUID}', encodeURIComponent(namespaceUID))
+              .replace('${podLabels}', JSON.stringify(resource.metadata.labels));
+            return (
+              <React.Fragment key={link.metadata.uid}>
+                <ExternalLink
+                  href={url}
+                  text={link.spec.text}
+                  additionalClassName="co-external-link--within-toolbar btn btn-link"
+                  dataTestID={link.metadata.name}
+                />
+                <span aria-hidden="true" className="co-action-divider hidden-xs">
+                  |
+                </span>
+              </React.Fragment>
+            );
+          })}
+        <Button variant="link" onClick={onDownload}>
+          <DownloadIcon className="co-icon-space-r" />
+          Download
+        </Button>
+        <span aria-hidden="true" className="co-action-divider hidden-xs">
+          |
+        </span>
+        <Button variant="link" className="pf-m-link--align-right" onClick={toggleFullscreen}>
+          {isFullscreen ? (
+            <React.Fragment>
+              <CompressIcon className="co-icon-space-r" />
+              Collapse
+            </React.Fragment>
+          ) : (
+            <React.Fragment>
+              <ExpandIcon className="co-icon-space-r" />
+              Expand
+            </React.Fragment>
+          )}
+        </Button>
+      </div>
     </div>
-  </div>;
+  );
 };
 
 // Resource agnostic log component
@@ -109,6 +151,7 @@ class ResourceLog_ extends React.Component {
       stale: false,
       status: STREAM_LOADING,
       isFullscreen: false,
+      namespaceUID: '',
     };
   }
 
@@ -117,7 +160,10 @@ class ResourceLog_ extends React.Component {
       const newState = {};
       newState.resourceStatus = nextProps.resourceStatus;
       // Container changed from non-running to running state, so currently displayed logs are stale
-      if (prevState.resourceStatus === LOG_SOURCE_RESTARTING && newState.resourceStatus !== LOG_SOURCE_RESTARTING) {
+      if (
+        prevState.resourceStatus === LOG_SOURCE_RESTARTING &&
+        newState.resourceStatus !== LOG_SOURCE_RESTARTING
+      ) {
         newState.stale = true;
       }
       return newState;
@@ -126,9 +172,17 @@ class ResourceLog_ extends React.Component {
   }
 
   fetchLogLinks() {
-    k8sGet(ConsoleExternalLogLinkModel)
-      .then(podLogLinks => this.setState({podLogLinks: podLogLinks.items}))
-      .catch(e => this.setState({error: e}));
+    const promises = [
+      k8sList(ConsoleExternalLogLinkModel),
+      k8sGet(ProjectModel, this.props.resource.metadata.namespace),
+    ];
+    Promise.all(promises)
+      .then(([podLogLinks, project]) => {
+        // Project UID and namespace UID are the same value. Use the projects
+        // API since normal OpenShift users can list projects.
+        this.setState({ podLogLinks, namespaceUID: project.metadata.uid });
+      })
+      .catch((e) => this.setState({ error: e }));
   }
 
   componentDidMount() {
@@ -148,7 +202,9 @@ class ResourceLog_ extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     const containerChanged = prevProps.containerName !== this.props.containerName;
-    const resourceStarted = prevState.resourceStatus === LOG_SOURCE_WAITING && this.state.resourceStatus !== LOG_SOURCE_WAITING;
+    const resourceStarted =
+      prevState.resourceStatus === LOG_SOURCE_WAITING &&
+      this.state.resourceStatus !== LOG_SOURCE_WAITING;
 
     // Container changed or transitioned out of waiting state
     if (containerChanged || resourceStarted) {
@@ -164,8 +220,8 @@ class ResourceLog_ extends React.Component {
 
   // Download currently displayed log content
   _download() {
-    const {resource, containerName} = this.props;
-    const blob = this._buffer.getBlob({type: 'text/plain;charset=utf-8'});
+    const { resource, containerName } = this.props;
+    const blob = this._buffer.getBlob({ type: 'text/plain;charset=utf-8' });
     let filename = resource.metadata.name;
     if (containerName) {
       filename = `${filename}-${containerName}`;
@@ -174,21 +230,21 @@ class ResourceLog_ extends React.Component {
   }
 
   // Handler for websocket onclose event
-  _onClose(){
+  _onClose() {
     this.setState({ status: STREAM_EOF });
   }
 
   // Handler for websocket onerror event
-  _onError(){
+  _onError() {
     this.setState({
       error: true,
     });
   }
 
   // Handler for websocket onmessage event
-  _onMessage(msg){
+  _onMessage(msg) {
     const { linesBehind, status } = this.state;
-    if (msg){
+    if (msg) {
       const text = Base64.decode(msg);
       const linesAdded = this._buffer.ingest(text);
       this.setState({
@@ -199,23 +255,26 @@ class ResourceLog_ extends React.Component {
   }
 
   // Handler for websocket onopen event
-  _onOpen(){
+  _onOpen() {
     this._buffer.clear();
     this._updateStatus(STREAM_ACTIVE);
   }
 
   // Destroy and reinitialize websocket connection
   _restartStream() {
-    this.setState({
-      error: false,
-      lines: [],
-      linesBehind: 0,
-      stale: false,
-      status: STREAM_LOADING,
-    }, () => {
-      this._wsDestroy();
-      this._wsInit(this.props);
-    });
+    this.setState(
+      {
+        error: false,
+        lines: [],
+        linesBehind: 0,
+        stale: false,
+        status: STREAM_LOADING,
+      },
+      () => {
+        this._wsDestroy();
+        this._wsInit(this.props);
+      },
+    );
   }
 
   // Toggle currently displayed log content to/from fullscreen
@@ -238,8 +297,8 @@ class ResourceLog_ extends React.Component {
 
   // Updates log status
   _updateStatus(newStatus) {
-    const {status} = this.state;
-    const newState = {status: newStatus};
+    const { status } = this.state;
+    const newState = { status: newStatus };
 
     // Reset linesBehind when transitioning out of paused state
     if (status !== STREAM_ACTIVE && newStatus === STREAM_ACTIVE) {
@@ -254,8 +313,12 @@ class ResourceLog_ extends React.Component {
   }
 
   // Initialize websocket connection and wire up handlers
-  _wsInit({resource, containerName, bufferSize}) {
-    if ([LOG_SOURCE_RUNNING, LOG_SOURCE_TERMINATED, LOG_SOURCE_RESTARTING].includes(this.state.resourceStatus)) {
+  _wsInit({ resource, containerName, bufferSize }) {
+    if (
+      [LOG_SOURCE_RUNNING, LOG_SOURCE_TERMINATED, LOG_SOURCE_RESTARTING].includes(
+        this.state.resourceStatus,
+      )
+    ) {
       const urlOpts = {
         ns: resource.metadata.namespace,
         name: resource.metadata.name,
@@ -282,45 +345,66 @@ class ResourceLog_ extends React.Component {
   }
 
   render() {
-    const {resource, containerName, dropdown, bufferSize} = this.props;
-    const {error, lines, linesBehind, stale, status, isFullscreen, podLogLinks} = this.state;
+    const { resource, containerName, dropdown, bufferSize } = this.props;
+    const {
+      error,
+      lines,
+      linesBehind,
+      stale,
+      status,
+      isFullscreen,
+      podLogLinks,
+      namespaceUID,
+    } = this.state;
     const bufferFull = lines.length === bufferSize;
 
-    return <React.Fragment>
-      {error && <Alert
-        isInline
-        className="co-alert"
-        variant="danger"
-        title="An error occurred while retrieving the requested logs."
-        action={<AlertActionLink onClick={this._restartStream}>Retry</AlertActionLink>}
-      />}
-      {stale && <Alert
-        isInline
-        className="co-alert"
-        variant="info"
-        title={`The logs for this ${resource.kind} may be stale.`}
-        action={<AlertActionLink onClick={this._restartStream}>Refresh</AlertActionLink>}
-      />}
-      <div ref={this._resourceLogRef} className={classNames('resource-log', {'resource-log--fullscreen': isFullscreen})}>
-        <LogControls
-          dropdown={dropdown}
-          isFullscreen={isFullscreen}
-          onDownload={this._download}
-          status={status}
-          toggleFullscreen={this._toggleFullscreen}
-          toggleStreaming={this._toggleStreaming}
-          resource={resource}
-          containerName={containerName}
-          podLogLinks={podLogLinks} />
-        <LogWindow
-          lines={lines}
-          linesBehind={linesBehind}
-          bufferFull={bufferFull}
-          isFullscreen={isFullscreen}
-          status={status}
-          updateStatus={this._updateStatus} />
-      </div>
-    </React.Fragment>;
+    return (
+      <React.Fragment>
+        {error && (
+          <Alert
+            isInline
+            className="co-alert"
+            variant="danger"
+            title="An error occurred while retrieving the requested logs."
+            action={<AlertActionLink onClick={this._restartStream}>Retry</AlertActionLink>}
+          />
+        )}
+        {stale && (
+          <Alert
+            isInline
+            className="co-alert"
+            variant="info"
+            title={`The logs for this ${resource.kind} may be stale.`}
+            action={<AlertActionLink onClick={this._restartStream}>Refresh</AlertActionLink>}
+          />
+        )}
+        <div
+          ref={this._resourceLogRef}
+          className={classNames('resource-log', { 'resource-log--fullscreen': isFullscreen })}
+        >
+          <LogControls
+            dropdown={dropdown}
+            isFullscreen={isFullscreen}
+            onDownload={this._download}
+            status={status}
+            toggleFullscreen={this._toggleFullscreen}
+            toggleStreaming={this._toggleStreaming}
+            resource={resource}
+            containerName={containerName}
+            podLogLinks={podLogLinks}
+            namespaceUID={namespaceUID}
+          />
+          <LogWindow
+            lines={lines}
+            linesBehind={linesBehind}
+            bufferFull={bufferFull}
+            isFullscreen={isFullscreen}
+            status={status}
+            updateStatus={this._updateStatus}
+          />
+        </div>
+      </React.Fragment>
+    );
   }
 }
 

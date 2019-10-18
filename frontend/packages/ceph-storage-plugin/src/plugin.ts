@@ -10,8 +10,8 @@ import {
   RoutePage,
   ClusterServiceVersionAction,
 } from '@console/plugin-sdk';
-import { GridPosition } from '@console/internal/components/dashboard';
-import { OverviewQuery } from '@console/internal/components/dashboards-page/overview-dashboard/queries';
+import { GridPosition } from '@console/shared/src/components/dashboard/DashboardGrid';
+import { OverviewQuery } from '@console/internal/components/dashboard/dashboards-page/overview-dashboard/queries';
 import { ClusterServiceVersionModel } from '@console/operator-lifecycle-manager/src/models';
 import { referenceForModel } from '@console/internal/module/k8s';
 import * as models from './models';
@@ -20,8 +20,7 @@ import {
   StorageDashboardQuery,
   STORAGE_HEALTH_QUERIES,
 } from './constants/queries';
-import { STORAGE_HEALTH_RESOURCES, StorageDashboardResource } from './constants/resources';
-import { getCephHealthState } from './components/dashboard-page/storage-dashboard/health-card/utils';
+import { getCephHealthState } from './components/dashboard-page/storage-dashboard/status-card/utils';
 
 type ConsumedExtensions =
   | ModelFeatureFlag
@@ -34,8 +33,6 @@ type ConsumedExtensions =
   | ClusterServiceVersionAction;
 
 const CEPH_FLAG = 'CEPH';
-// keeping this for testing, will be removed once ocs operator available
-// const apiObjectRef = 'core.libopenstorage.org~v1alpha1~StorageCluster';
 const apiObjectRef = referenceForModel(models.OCSServiceModel);
 
 const plugin: Plugin<ConsumedExtensions> = [
@@ -56,7 +53,7 @@ const plugin: Plugin<ConsumedExtensions> = [
     type: 'Dashboards/Tab',
     properties: {
       id: 'persistent-storage',
-      title: 'Persistent Storage',
+      title: 'OCS PV',
       required: CEPH_FLAG,
     },
   },
@@ -104,7 +101,7 @@ const plugin: Plugin<ConsumedExtensions> = [
       position: GridPosition.MAIN,
       loader: () =>
         import(
-          './components/dashboard-page/storage-dashboard/health-card/health-card' /* webpackChunkName: "ceph-storage-health-card" */
+          './components/dashboard-page/storage-dashboard/status-card/status-card' /* webpackChunkName: "ceph-storage-status-card" */
         ).then((m) => m.default),
       required: CEPH_FLAG,
     },
@@ -114,35 +111,9 @@ const plugin: Plugin<ConsumedExtensions> = [
     properties: {
       tab: 'persistent-storage',
       position: GridPosition.MAIN,
-      span: 6,
       loader: () =>
         import(
-          './components/dashboard-page/storage-dashboard/capacity-card/capacity-card' /* webpackChunkName: "ceph-storage-capacity-card" */
-        ).then((m) => m.default),
-      required: CEPH_FLAG,
-    },
-  },
-  {
-    type: 'Dashboards/Card',
-    properties: {
-      tab: 'persistent-storage',
-      position: GridPosition.MAIN,
-      span: 6,
-      loader: () =>
-        import(
-          './components/dashboard-page/storage-dashboard/data-resiliency/data-resiliency' /* webpackChunkName: "ceph-storage-data-resiliency-card" */
-        ).then((m) => m.DataResiliencyWithResources),
-      required: CEPH_FLAG,
-    },
-  },
-  {
-    type: 'Dashboards/Card',
-    properties: {
-      tab: 'persistent-storage',
-      position: GridPosition.MAIN,
-      loader: () =>
-        import(
-          './components/dashboard-page/storage-dashboard/top-consumers-card/top-consumers-card' /* webpackChunkName: "ceph-storage-top-consumers-card" */
+          './components/dashboard-page/storage-dashboard/utilization-card/utilization-card' /* webpackChunkName: "ceph-storage-utilization-card" */
         ).then((m) => m.default),
       required: CEPH_FLAG,
     },
@@ -155,20 +126,8 @@ const plugin: Plugin<ConsumedExtensions> = [
       position: GridPosition.RIGHT,
       loader: () =>
         import(
-          './components/dashboard-page/storage-dashboard/events-card' /* webpackChunkName: "ceph-storage-events-card" */
-        ).then((m) => m.default),
-      required: CEPH_FLAG,
-    },
-  },
-  {
-    type: 'Dashboards/Card',
-    properties: {
-      tab: 'persistent-storage',
-      position: GridPosition.RIGHT,
-      loader: () =>
-        import(
-          './components/dashboard-page/storage-dashboard/utilization-card/utilization-card' /* webpackChunkName: "ceph-storage-utilization-card" */
-        ).then((m) => m.default),
+          './components/dashboard-page/storage-dashboard/activity-card/activity-card' /* webpackChunkName: "ceph-storage-activity-card" */
+        ).then((m) => m.ActivityCard),
       required: CEPH_FLAG,
     },
   },
@@ -176,8 +135,7 @@ const plugin: Plugin<ConsumedExtensions> = [
     type: 'Dashboards/Overview/Health/Prometheus',
     properties: {
       title: 'Storage',
-      query: STORAGE_HEALTH_QUERIES[StorageDashboardQuery.CEPH_STATUS_QUERY],
-      resource: STORAGE_HEALTH_RESOURCES[StorageDashboardResource.CEPH_CLUSTER_RESOURCE],
+      queries: [STORAGE_HEALTH_QUERIES[StorageDashboardQuery.CEPH_STATUS_QUERY]],
       healthHandler: getCephHealthState,
       required: CEPH_FLAG,
     },

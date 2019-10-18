@@ -10,14 +10,16 @@ import {
   WizardStep,
 } from '@patternfly/react-core';
 import * as _ from 'lodash';
-import { ALL_VM_WIZARD_TABS, VMWizardTab } from './types';
+import { useShowErrorToggler } from '../../hooks/use-show-error-toggler';
+import { getDialogUIError } from '../../utils/strings';
+import { ALL_VM_WIZARD_TABS, VMWizardProps, VMWizardTab } from './types';
 import {
   hasStepAllRequiredFilled,
   isStepLocked,
   isStepValid,
 } from './selectors/immutable/wizard-selectors';
-import { iGetCreateVMWizardTabs } from './selectors/immutable/selectors';
-import { REVIEW_AND_CREATE } from './strings/strings';
+import { iGetCommonData, iGetCreateVMWizardTabs } from './selectors/immutable/selectors';
+import { getCreateVMLikeEntityLabel, REVIEW_AND_CREATE } from './strings/strings';
 
 import './create-vm-wizard-footer.scss';
 
@@ -30,46 +32,35 @@ type WizardContext = {
 };
 type CreateVMWizardFooterComponentProps = {
   stepData: any;
-  createVMText: string;
+  isCreateTemplate: boolean;
 };
 
 const CreateVMWizardFooterComponent: React.FC<CreateVMWizardFooterComponentProps> = ({
   stepData,
-  createVMText,
+  isCreateTemplate,
 }) => {
-  const [showError, setShowError] = React.useState(false);
-  const [prevIsValid, setPrevIsValid] = React.useState(false);
-
+  const [showError, setShowError, checkValidity] = useShowErrorToggler();
   return (
     <WizardContextConsumer>
       {({ onNext, onBack, onClose, activeStep, goToStepById }: WizardContext) => {
         const activeStepID = activeStep.id as VMWizardTab;
         const isLocked = _.some(ALL_VM_WIZARD_TABS, (id) => isStepLocked(stepData, id));
         const isValid = isStepValid(stepData, activeStepID);
-
-        if (isValid !== prevIsValid) {
-          setPrevIsValid(isValid);
-          if (isValid) {
-            setShowError(false);
-          }
-        }
+        checkValidity(isValid);
 
         const isFirstStep = activeStepID === VMWizardTab.VM_SETTINGS;
         const isFinishingStep = [VMWizardTab.REVIEW, VMWizardTab.RESULT].includes(activeStepID);
         const isLastStep = activeStepID === VMWizardTab.RESULT;
 
         const isNextButtonDisabled = isLocked;
+        const isReviewButtonDisabled = isLocked;
         const isBackButtonDisabled = isFirstStep || isLocked;
 
         return (
           <footer className={css(styles.wizardFooter)}>
             {!isValid && showError && (
               <Alert
-                title={
-                  hasStepAllRequiredFilled(stepData, activeStepID)
-                    ? 'Please correct the invalid fields.'
-                    : 'Please fill in all required fields.'
-                }
+                title={getDialogUIError(hasStepAllRequiredFilled(stepData, activeStepID))}
                 isInline
                 variant="danger"
                 className="kubevirt-create-vm-modal__footer-error"
@@ -87,12 +78,15 @@ const CreateVMWizardFooterComponent: React.FC<CreateVMWizardFooterComponentProps
                 }}
                 isDisabled={isNextButtonDisabled}
               >
-                {activeStepID === VMWizardTab.REVIEW ? createVMText : 'Next'}
+                {activeStepID === VMWizardTab.REVIEW
+                  ? getCreateVMLikeEntityLabel(isCreateTemplate)
+                  : 'Next'}
               </Button>
             )}
             {!isFinishingStep && (
               <Button
                 variant={ButtonVariant.secondary}
+                isDisabled={isReviewButtonDisabled}
                 onClick={() => {
                   const jumpToStepID =
                     (isValid &&
@@ -135,6 +129,7 @@ const CreateVMWizardFooterComponent: React.FC<CreateVMWizardFooterComponentProps
 
 const stateToProps = (state, { wizardReduxID }) => ({
   stepData: iGetCreateVMWizardTabs(state, wizardReduxID),
+  isCreateTemplate: iGetCommonData(state, wizardReduxID, VMWizardProps.isCreateTemplate),
 });
 
 export const CreateVMWizardFooter = connect(stateToProps)(CreateVMWizardFooterComponent);

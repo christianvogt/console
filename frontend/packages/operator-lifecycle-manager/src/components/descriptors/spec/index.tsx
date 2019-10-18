@@ -1,16 +1,17 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { Map as ImmutableMap } from 'immutable';
-import { Tooltip, Switch } from '@patternfly/react-core';
-import { EyeIcon, EyeSlashIcon } from '@patternfly/react-icons';
-import { Selector, ResourceLink, LoadingInline } from '@console/internal/components/utils';
+import { Button, Switch, Tooltip } from '@patternfly/react-core';
+import { EyeIcon, EyeSlashIcon, PencilAltIcon } from '@patternfly/react-icons';
+import { LoadingInline, ResourceLink, Selector } from '@console/internal/components/utils';
 import { k8sPatch } from '@console/internal/module/k8s';
 import { YellowExclamationTriangleIcon } from '@console/shared';
 import { SecretValue } from '@console/internal/components/configmap-and-secret-data';
-import { SpecCapability, DescriptorProps, CapabilityProps } from '../types';
+import { CapabilityProps, DescriptorProps, SpecCapability } from '../types';
 import { ResourceRequirementsModalLink } from './resource-requirements';
 import { EndpointList } from './endpoint';
 import { configureSizeModal } from './configure-size';
+import { configureUpdateStrategyModal } from './configure-update-strategy';
 
 const Default: React.SFC<SpecCapabilityProps> = ({ value }) => {
   if (_.isEmpty(value) && !_.isNumber(value)) {
@@ -23,9 +24,9 @@ const Default: React.SFC<SpecCapabilityProps> = ({ value }) => {
 };
 
 const PodCount: React.SFC<SpecCapabilityProps> = ({ model, obj, descriptor, value }) => (
-  <button
+  <Button
+    isInline
     type="button"
-    className="btn btn-link co-modal-btn-link"
     onClick={() =>
       configureSizeModal({
         kindObj: model,
@@ -34,9 +35,11 @@ const PodCount: React.SFC<SpecCapabilityProps> = ({ model, obj, descriptor, valu
         specValue: value,
       })
     }
+    variant="link"
   >
     {value} pods
-  </button>
+    <PencilAltIcon className="co-icon-space-l pf-c-button-icon--plain" />
+  </Button>
 );
 
 const Endpoints: React.SFC<SpecCapabilityProps> = ({ value }) => <EndpointList endpoints={value} />;
@@ -93,6 +96,7 @@ const BooleanSwitch: React.FC<SpecCapabilityProps> = (props) => {
   return (
     <div className="co-spec-descriptor--switch">
       <Switch
+        id={props.descriptor.path}
         isChecked={value}
         onChange={(val) => {
           setValue(val);
@@ -139,8 +143,23 @@ const Secret: React.FC<SpecCapabilityProps> = (props) => {
   );
 };
 
-const UpdateStrategy: React.FC<SpecCapabilityProps> = (props) => (
-  <div>{_.get(props.value, 'type', 'None')}</div>
+const UpdateStrategy: React.FC<SpecCapabilityProps> = ({ model, obj, descriptor, value }) => (
+  <Button
+    type="button"
+    variant="link"
+    isInline
+    onClick={() =>
+      configureUpdateStrategyModal({
+        kindObj: model,
+        resource: obj,
+        specDescriptor: descriptor,
+        specValue: value,
+      })
+    }
+  >
+    {_.get(value, 'type', 'None')}
+    <PencilAltIcon className="co-icon-space-l pf-c-button-icon--plain" />
+  </Button>
 );
 
 const capabilityComponents = ImmutableMap<

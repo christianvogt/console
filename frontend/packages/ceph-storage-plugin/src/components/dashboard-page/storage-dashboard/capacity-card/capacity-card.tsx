@@ -1,19 +1,16 @@
 import * as React from 'react';
 import * as plugins from '@console/internal/plugins';
 import { connectToFlags, FlagsObject, WithFlagsProps } from '@console/internal/reducers/features';
-import { getFlagsForExtensions } from '@console/internal/components/dashboards-page/utils';
-import { CapacityBody, CapacityItem } from '@console/internal/components/dashboard/capacity-card';
-import {
-  DashboardCard,
-  DashboardCardBody,
-  DashboardCardHeader,
-  DashboardCardTitle,
-} from '@console/internal/components/dashboard/dashboard-card';
+import CapacityBody from '@console/shared/src/components/dashboard/capacity-card/CapacityBody';
+import CapacityItem from '@console/shared/src/components/dashboard/capacity-card/CapacityItem';
+import DashboardCard from '@console/shared/src/components/dashboard/dashboard-card/DashboardCard';
+import DashboardCardBody from '@console/shared/src/components/dashboard/dashboard-card/DashboardCardBody';
+import DashboardCardHeader from '@console/shared/src/components/dashboard/dashboard-card/DashboardCardHeader';
+import DashboardCardTitle from '@console/shared/src/components/dashboard/dashboard-card/DashboardCardTitle';
 import {
   DashboardItemProps,
   withDashboardResources,
-} from '@console/internal/components/dashboards-page/with-dashboard-resources';
-import { DashboardsStorageCapacityDropdownItem } from '@console/plugin-sdk';
+} from '@console/internal/components/dashboard/with-dashboard-resources';
 import {
   Dropdown,
   FieldLevelHelp,
@@ -21,6 +18,14 @@ import {
 } from '@console/internal/components/utils';
 import { getInstantVectorStats, GetStats } from '@console/internal/components/graphs/utils';
 import { PrometheusResponse } from '@console/internal/components/graphs';
+import {
+  getFlagsForExtensions,
+  isDashboardExtensionInUse,
+} from '@console/internal/components/dashboard/utils';
+import {
+  DashboardsStorageCapacityDropdownItem,
+  isDashboardsStorageCapacityDropdownItem,
+} from '../../../../extensions/dashboards';
 import { StorageDashboardQuery, CAPACITY_USAGE_QUERIES } from '../../../../constants/queries';
 import './capacity-card.scss';
 
@@ -48,19 +53,22 @@ const QueriesMatchingCapacityView: QueryMapType = {
   ],
 };
 
-const getItems = (plugin: DashboardsStorageCapacityDropdownItem[], flags: FlagsObject) =>
-  plugin.filter((e) => flags[e.properties.required]);
+const getItems = (extensions: DashboardsStorageCapacityDropdownItem[], flags: FlagsObject) =>
+  extensions.filter((e) => isDashboardExtensionInUse(e, flags));
 
 const getCapacityQueries = (flags: FlagsObject) => {
   const capacityQueries = { ...QueriesMatchingCapacityView };
-  getItems(plugins.registry.getDashboardsStorageCapacityDropdownItem(), flags).forEach(
-    (pluginItem) => {
-      if (!capacityQueries[pluginItem.properties.metric]) {
-        capacityQueries[pluginItem.properties.metric] = pluginItem.properties.queries;
-        CapacityViewType[pluginItem.properties.metric] = pluginItem.properties.metric;
-      }
-    },
-  );
+  getItems(
+    plugins.registry.get<DashboardsStorageCapacityDropdownItem>(
+      isDashboardsStorageCapacityDropdownItem,
+    ),
+    flags,
+  ).forEach((pluginItem) => {
+    if (!capacityQueries[pluginItem.properties.metric]) {
+      capacityQueries[pluginItem.properties.metric] = pluginItem.properties.queries;
+      CapacityViewType[pluginItem.properties.metric] = pluginItem.properties.metric;
+    }
+  });
   return capacityQueries;
 };
 
@@ -132,7 +140,7 @@ export const CapacityCard: React.FC<DashboardItemProps & WithFlagsProps> = ({
 };
 
 export default connectToFlags(
-  ...getFlagsForExtensions(plugins.registry.getDashboardsStorageCapacityDropdownItem()),
+  ...getFlagsForExtensions(plugins.registry.get(isDashboardsStorageCapacityDropdownItem)),
 )(withDashboardResources(CapacityCard));
 
 export type QueryMapType = {

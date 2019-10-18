@@ -1,20 +1,20 @@
 import * as React from 'react';
-import {
-  DashboardCard,
-  DashboardCardBody,
-  DashboardCardHeader,
-  DashboardCardTitle,
-} from '@console/internal/components/dashboard/dashboard-card';
-import { DetailsBody, DetailItem } from '@console/internal/components/dashboard/details-card';
+import DashboardCard from '@console/shared/src/components/dashboard/dashboard-card/DashboardCard';
+import DashboardCardBody from '@console/shared/src/components/dashboard/dashboard-card/DashboardCardBody';
+import DashboardCardHeader from '@console/shared/src/components/dashboard/dashboard-card/DashboardCardHeader';
+import DashboardCardTitle from '@console/shared/src/components/dashboard/dashboard-card/DashboardCardTitle';
+import DetailsBody from '@console/shared/src/components/dashboard/details-card/DetailsBody';
+import DetailItem from '@console/shared/src/components/dashboard/details-card/DetailItem';
 import {
   DashboardItemProps,
   withDashboardResources,
-} from '@console/internal/components/dashboards-page/with-dashboard-resources';
+} from '@console/internal/components/dashboard/with-dashboard-resources';
 import { getName, getMachineNode } from '@console/shared';
-import { K8sResourceKind, MachineKind, NodeKind } from '@console/internal/module/k8s';
+import { MachineKind, NodeKind } from '@console/internal/module/k8s';
 import { getHostMachine } from '../../../selectors';
 import NodeLink from '../NodeLink';
 import BareMetalHostRole from '../BareMetalHostRole';
+import { BareMetalHostKind } from '../../../types';
 
 const DetailsCard: React.FC<DetailsCardProps> = ({ obj, machines, nodes }) => {
   const machine = getHostMachine(obj, machines);
@@ -48,7 +48,7 @@ const DetailsCard: React.FC<DetailsCardProps> = ({ obj, machines, nodes }) => {
 export default withDashboardResources(DetailsCard);
 
 type DetailsCardProps = DashboardItemProps & {
-  obj: K8sResourceKind;
+  obj: BareMetalHostKind;
   machines: MachineKind[];
   nodes: NodeKind[];
 };

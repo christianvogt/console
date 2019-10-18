@@ -3,19 +3,20 @@ import {
   ImageStreamModel,
   BuildConfigModel,
   DeploymentConfigModel,
-  ServiceModel,
-  RouteModel,
   ProjectRequestModel,
   SecretModel,
+  ServiceModel,
+  RouteModel,
 } from '@console/internal/models';
 import { k8sCreate, K8sResourceKind } from '@console/internal/module/k8s';
-import { createKnativeService } from '@console/knative-plugin';
+import {
+  getKnativeServiceDepResource,
+  ServiceModel as KnServiceModel,
+} from '@console/knative-plugin';
 import { SecretType } from '@console/internal/components/secrets/create-secret';
-import { makePortName } from '../../utils/imagestream-utils';
 import { getAppLabels, getPodLabels, getAppAnnotations } from '../../utils/resource-label-utils';
+import { createService, createRoute, dryRunOpt } from '../../utils/shared-submit-utils';
 import { GitImportFormData, ProjectData, GitTypes, GitReadableTypes } from './import-types';
-
-const dryRunOpt = { queryParams: { dryRun: 'All' } };
 
 const generateSecret = () => {
   // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
@@ -271,118 +272,6 @@ export const createDeploymentConfig = (
   return k8sCreate(DeploymentConfigModel, deploymentConfig, dryRun ? dryRunOpt : {});
 };
 
-export const createService = (
-  formData: GitImportFormData,
-  imageStream: K8sResourceKind,
-  dryRun: boolean,
-): Promise<K8sResourceKind> => {
-  const {
-    name,
-    project: { name: namespace },
-    application: { name: application },
-    image: { ports, tag },
-    labels: userLabels,
-    route: { targetPort },
-    docker: { containerPort },
-    build: { strategy: buildStrategy },
-    git: { url: repository, ref },
-  } = formData;
-  let port;
-  if (buildStrategy === 'Docker') {
-    port = { containerPort, protocol: 'TCP' };
-  } else {
-    port = ports.find((p) => targetPort === makePortName(p)) || _.head(ports);
-  }
-
-  const imageStreamName = imageStream && imageStream.metadata.name;
-  const defaultLabels = getAppLabels(name, application, imageStreamName, tag);
-  const defaultAnnotations = getAppAnnotations(repository, ref);
-  const podLabels = getPodLabels(name);
-  const service = {
-    kind: 'Service',
-    apiVersion: 'v1',
-    metadata: {
-      name,
-      namespace,
-      labels: { ...defaultLabels, ...userLabels },
-      annotations: defaultAnnotations,
-    },
-    spec: {
-      selector: podLabels,
-      ports: [
-        {
-          port: port.containerPort,
-          targetPort: port.containerPort,
-          protocol: port.protocol,
-          // Use the same naming convention as the CLI.
-          name: makePortName(port),
-        },
-      ],
-    },
-  };
-
-  return k8sCreate(ServiceModel, service, dryRun ? dryRunOpt : {});
-};
-
-export const createRoute = (
-  formData: GitImportFormData,
-  imageStream: K8sResourceKind,
-  dryRun: boolean,
-): Promise<K8sResourceKind> => {
-  const {
-    name,
-    project: { name: namespace },
-    application: { name: application },
-    image: { ports, tag },
-    labels: userLabels,
-    route: { hostname, secure, path, tls, targetPort: routeTargetPort },
-    docker: { containerPort },
-    build: { strategy: buildStrategy },
-    git: { url: repository, ref },
-  } = formData;
-
-  let targetPort;
-  if (buildStrategy === 'Docker') {
-    targetPort = makePortName({ containerPort: _.toInteger(containerPort), protocol: 'TCP' });
-  } else {
-    targetPort = routeTargetPort || makePortName(_.head(ports));
-  }
-
-  const imageStreamName = imageStream && imageStream.metadata.name;
-  const defaultLabels = getAppLabels(name, application, imageStreamName, tag);
-  const defaultAnnotations = getAppAnnotations(repository, ref);
-  const route = {
-    kind: 'Route',
-    apiVersion: 'route.openshift.io/v1',
-    metadata: {
-      name,
-      namespace,
-      labels: { ...defaultLabels, ...userLabels },
-      annotations: defaultAnnotations,
-    },
-    spec: {
-      to: {
-        kind: 'Service',
-        name,
-      },
-      ...(secure ? { tls } : {}),
-      host: hostname,
-      path,
-      // The service created by `createService` uses the same port as the container port.
-      port: {
-        // Use the port name, not the number for targetPort. The router looks
-        // at endpoints, not services, when resolving ports, so port numbers
-        // will not resolve correctly if the service port and container port
-        // numbers don't match.
-        targetPort,
-      },
-      wildcardPolicy: 'None',
-    },
-  };
-
-  return k8sCreate(RouteModel, route, dryRun ? dryRunOpt : {});
-};
-
 export const createResources = async (
   formData: GitImportFormData,
   imageStream: K8sResourceKind,
@@ -390,19 +279,12 @@ export const createResources = async (
   dryRun: boolean = false,
 ): Promise<K8sResourceKind[]> => {
   const {
-    name,
-    application: { name: applicationName },
-    project: { name: projectName },
     route: { create: canCreateRoute },
-    image: { ports, tag: imageTag },
+    image: { ports },
     build: {
       strategy: buildStrategy,
       triggers: { webhook: webhookTrigger },
     },
-    labels: userLabels,
-    limits,
-    serverless: { scaling },
-    route: { unknownTargetPort },
     git: { url: repository, type: gitType, ref },
   } = formData;
   const imageStreamName = _.get(imageStream, 'metadata.name');
@@ -424,29 +306,23 @@ export const createResources = async (
     }
 
     const [imageStreamResponse] = await Promise.all(requests);
-    return Promise.all([
-      createKnativeService(
-        name,
-        applicationName,
-        projectName,
-        scaling,
-        limits,
-        unknownTargetPort,
-        userLabels,
-        imageStreamResponse.status.dockerImageRepository,
-        imageStreamName,
-        defaultAnnotations,
-        imageTag,
-      ),
-    ]);
+    const knDeploymentResource = getKnativeServiceDepResource(
+      formData,
+      imageStreamResponse.status.dockerImageRepository,
+      imageStreamName,
+      defaultAnnotations,
+    );
+    return Promise.all([k8sCreate(KnServiceModel, knDeploymentResource)]);
   }
 
   requests.push(createDeploymentConfig(formData, imageStream, dryRun));
 
   if (!_.isEmpty(ports) || buildStrategy === 'Docker') {
-    requests.push(createService(formData, imageStream, dryRun));
+    const service = createService(formData, imageStream);
+    requests.push(k8sCreate(ServiceModel, service, dryRun ? dryRunOpt : {}));
     if (canCreateRoute) {
-      requests.push(createRoute(formData, imageStream, dryRun));
+      const route = createRoute(formData, imageStream);
+      requests.push(k8sCreate(RouteModel, route, dryRun ? dryRunOpt : {}));
     }
   }
 
