@@ -74,6 +74,18 @@ const plugin: Plugin<ConsumedExtensions> = [
     },
   },
   {
+    type: 'NavItem/Href',
+    properties: {
+      perspective: 'dev',
+      componentProps: {
+        name: 'Topology2',
+        href: '/topology2',
+        required: FLAGS.OPENSHIFT,
+        testID: 'topology2-header',
+      },
+    },
+  },
+  {
     type: 'NavItem/ResourceNS',
     properties: {
       perspective: 'dev',
@@ -202,7 +214,7 @@ const plugin: Plugin<ConsumedExtensions> = [
     type: 'Page/Route',
     properties: {
       exact: true,
-      path: ['/add', '/import', '/topology', '/deploy-image', '/metrics'],
+      path: ['/add', '/import', '/topology', '/topology2', '/deploy-image', '/metrics'],
       component: NamespaceRedirect,
     },
   },
@@ -223,6 +235,17 @@ const plugin: Plugin<ConsumedExtensions> = [
       loader: async () =>
         (await import(
           './components/topology/TopologyPage' /* webpackChunkName: "dev-console-topology" */
+        )).default,
+    },
+  },
+  {
+    type: 'Page/Route',
+    properties: {
+      exact: true,
+      path: ['/topology2/all-namespaces', '/topology2/ns/:ns'],
+      loader: async () =>
+        (await import(
+          './components/topology2/TopologyPage' /* webpackChunkName: "dev-console-topology" */
         )).default,
     },
   },
