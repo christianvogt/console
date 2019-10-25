@@ -2,10 +2,12 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import Point from '../geom/Point';
 import { EdgeEntity } from '../types';
+import widget from '../widget';
 import { ConnectDragSource } from '../behavior/dnd-types';
 
 type ConnectorArrowProps = {
   edge: EdgeEntity;
+  className?: string;
   isTarget?: boolean;
   size?: number;
   dragRef?: ConnectDragSource | undefined;
@@ -23,8 +25,9 @@ const pointsStringFromPoints = (points: [number, number][]): string => {
 
 const ConnectorArrow: React.FC<ConnectorArrowProps> = ({
   edge,
+  className = '',
   isTarget = true,
-  size = 8,
+  size = 10,
   dragRef,
 }) => {
   const bendPoints = edge.getBendpoints();
@@ -66,11 +69,12 @@ const ConnectorArrow: React.FC<ConnectorArrowProps> = ({
     <g
       transform={`translate(${startPoint[0]}, ${startPoint[1]}) rotate(${angleDeg})`}
       ref={dragRef}
+      className={className}
     >
       <polygon points={pointsStringFromPoints(arrowPoints)} />
-      <polygon points={pointsStringFromPoints(boundingBox)} fillOpacity={0} />
+      <polygon points={pointsStringFromPoints(boundingBox)} fillOpacity={0} strokeWidth={0} />
     </g>
   );
 };
 
-export default ConnectorArrow;
+export default widget(ConnectorArrow);

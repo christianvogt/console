@@ -117,6 +117,7 @@ export default class BaseNodeEntity<E extends Node = Node, D = any> extends Base
     super.setModel(model);
     const bounds = this.getBounds();
     let r: Rect | undefined;
+
     // update width and height before position
     if ('width' in model && model.width != null) {
       if (!r) {
