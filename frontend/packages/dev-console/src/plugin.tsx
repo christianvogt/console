@@ -72,6 +72,7 @@ import {
 } from './components/topology/operators/operatorsTopologyPlugin';
 import { usePerspectiveDetection } from './utils/usePerspectiveDetection';
 import { getGuidedTour } from './components/guided-tour';
+import t3Plugin from './extensions/topology3-plugin';
 
 const {
   ClusterTaskModel,
@@ -108,6 +109,7 @@ type ConsumedExtensions =
   | OperatorsTopologyConsumedExtensions;
 
 const plugin: Plugin<ConsumedExtensions> = [
+  ...(t3Plugin as any),
   {
     type: 'ModelDefinition',
     properties: {
@@ -156,6 +158,20 @@ const plugin: Plugin<ConsumedExtensions> = [
         name: 'Topology',
         href: '/topology',
         testID: 'topology-header',
+      },
+    },
+    flags: {
+      required: [FLAGS.OPENSHIFT],
+    },
+  },
+
+  {
+    type: 'NavItem/Href',
+    properties: {
+      perspective: 'dev',
+      componentProps: {
+        name: 'Topology3',
+        href: '/topology3',
       },
     },
     flags: {
@@ -466,6 +482,7 @@ const plugin: Plugin<ConsumedExtensions> = [
         '/import-sample',
         '/samples',
         '/topology',
+        '/topology3',
         '/deploy-image',
         '/project-details',
         '/dev-monitoring',
@@ -502,6 +519,27 @@ const plugin: Plugin<ConsumedExtensions> = [
         (
           await import(
             './components/topology/TopologyPage' /* webpackChunkName: "dev-console-topology" */
+          )
+        ).default,
+    },
+  },
+
+  {
+    type: 'Page/Route',
+    properties: {
+      exact: true,
+      path: [
+        '/topology3/all-namespaces',
+        '/topology3/ns/:name',
+        '/topology3/all-namespaces/graph',
+        '/topology3/ns/:name/graph',
+        '/topology3/all-namespaces/list',
+        '/topology3/ns/:name/list',
+      ],
+      loader: async () =>
+        (
+          await import(
+            './components/topology3/TopologyPage' /* webpackChunkName: "dev-console-topology3" */
           )
         ).default,
     },

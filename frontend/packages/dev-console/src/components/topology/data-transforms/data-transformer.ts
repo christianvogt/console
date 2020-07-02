@@ -58,7 +58,7 @@ export const getTrafficConnectors = (
   }, []);
 };
 
-const getBaseTopologyDataModel = (
+export const getBaseTopologyDataModel = (
   resources: { [x: string]: Alerts } | TopologyDataResources,
 ): Model => {
   const baseDataModel: Model = {
