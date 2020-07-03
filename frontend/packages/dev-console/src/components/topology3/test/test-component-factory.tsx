@@ -5,24 +5,59 @@ import {
   Node,
   withCreateConnector,
   WithCreateConnectorProps,
+  Graph,
+  ConnectorChoice,
 } from '@console/topology';
+import {
+  isTopology3RelationshipProvider,
+  Topology3RelationshipProvider,
+} from 'packages/dev-console/src/extensions/topology3';
+import { useExtensions } from '@console/plugin-sdk';
 
 type TestNodeProps = {
   element: Node;
 };
 
+// TODO export from topology
+type onCreate = (
+  element: Node,
+  target: Node | Graph,
+  event: DragEvent,
+  dropHints: string[] | undefined,
+  choice?: ConnectorChoice,
+) => Promise<ConnectorChoice[] | void | undefined | null | React.ReactElement[]>;
+
+// onCreate: (
+//   element: Node,
+//   target: Node | Graph,
+//   event: DragEvent,
+//   dropHints: string[] | undefined,
+//   choice?: ConnectorChoice,
+// ) => Promise<ConnectorChoice[] | void | undefined | null | React.ReactElement[]>;
+
+type FooChoice = ConnectorChoice & {
+  extension: Topology3RelationshipProvider;
+};
+
+/* eslint-disable */
 export const withFoo = <P extends WithCreateConnectorProps & { element: Node }>(
   WrappedComponent: React.ComponentType<P>,
-) =>
-  withCreateConnector(
-    // onCreate: React.ComponentProps<typeof CreateConnectorWidget>['onCreate'],
-    // ConnectorComponent: CreateConnectorRenderer = DefaultCreateConnector,
-    // contextMenuClass?: string,
-    // options?: CreateConnectorOptions,
-    (() => {
-      // TODO
-    }) as any,
-  )(WrappedComponent);
+) => (props) => {
+  const extensions = useExtensions(isTopology3RelationshipProvider);
+  // const onCreate = React.useCallback<onCreate>(() => {
+
+  // }, [extensions]);
+  const CreateConnector = React.useMemo(() => {
+    return withCreateConnector((element, target, event, dropHinds, choice: any) => {
+      if (choice) {
+        return choice.extension.properties.create().then((create) => create(element, target));
+      }
+      return undefined;
+    })(WrappedComponent);
+  }, [extensions]);
+
+  return <CreateConnector {...props} />;
+};
 
 const TestNode: React.FC<TestNodeProps> = () => {
   return <circle cx="50" cy="50" fill="blue" r="50" />;

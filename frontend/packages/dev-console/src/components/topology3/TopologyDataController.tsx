@@ -25,13 +25,13 @@ type CodeRefLoaderProps<T> = {
 };
 
 const CodeRefLoader: React.FC<CodeRefLoaderProps<any>> = ({ codeRef, children }) => {
-  const [ref, setRef] = React.useState<{ provider: ModelProvider }>();
+  const [ref, setRef] = React.useState<{ value: any }>();
   React.useEffect(() => {
     let mounted = true;
     codeRef()
       .then((r) => {
         if (mounted) {
-          setRef({ provider: r });
+          setRef({ value: r });
         }
       })
       .catch(() => {
@@ -42,7 +42,7 @@ const CodeRefLoader: React.FC<CodeRefLoaderProps<any>> = ({ codeRef, children })
     };
   }, [codeRef]);
 
-  return ref?.provider ? children(ref.provider) : null;
+  return ref?.value ? children(ref.value) : null;
 };
 
 const Provider: React.FC<Topology3ModelProvider['properties'] & {
@@ -79,12 +79,8 @@ const TopologyDataController: React.FC<{
   const [results, setResults] = React.useState<ProviderResult[]>([]);
   const [model, setModel] = React.useState<Model>(null);
 
-  const loaded = results.reduce((i, r) => (r.loaded ? i + 1 : i), 0) === results.length;
-  const loadError = results.find((r) => {
-    // eslint-disable-next-line
-    console.log(r);
-    return r.error;
-  })?.error;
+  const loaded = results.reduce((i, r) => (r && r.loaded ? i + 1 : i), 0) === results.length;
+  const loadError = results.find((r) => r && r.error)?.error;
 
   React.useEffect(() => {
     if (loaded) {
