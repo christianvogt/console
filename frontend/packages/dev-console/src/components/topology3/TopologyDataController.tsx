@@ -80,7 +80,11 @@ const TopologyDataController: React.FC<{
   const [model, setModel] = React.useState<Model>(null);
 
   const loaded = results.reduce((i, r) => (r.loaded ? i + 1 : i), 0) === results.length;
-  const loadError = results.find((r) => r.error)?.error;
+  const loadError = results.find((r) => {
+    // eslint-disable-next-line
+    console.log(r);
+    return r.error;
+  })?.error;
 
   React.useEffect(() => {
     if (loaded) {

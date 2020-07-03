@@ -9,6 +9,9 @@ export type ModelProvider = (
 
 export type ModelTransform = (mode: Model) => Model;
 
+export type RelationshipProvider = (source: GraphElement, target?: GraphElement) => boolean;
+export type RelationshipCreator = (source: GraphElement, target: GraphElement) => Promise<boolean>;
+
 namespace ExtensionProperties {
   export interface Topology3ComponentFactory {
     /** Priority for the factory */
@@ -32,10 +35,8 @@ namespace ExtensionProperties {
   export interface Topology3RelationshipProvider {
     name: string;
     fallback?: boolean;
-
-    provides: CodeRef<(source: GraphElement, target?: GraphElement) => boolean>;
-
-    create: CodeRef<(source: GraphElement, target: GraphElement) => Promise<boolean>>;
+    provides: CodeRef<RelationshipProvider>;
+    create: CodeRef<RelationshipCreator>;
   }
 
   export interface Topology3DisplayOptions {
