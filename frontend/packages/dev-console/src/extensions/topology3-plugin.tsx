@@ -5,8 +5,10 @@ import {
   Topology3ModelTransform,
   Topology3RelationshipProvider,
 } from './topology3';
+import { TopologyComponentFactory } from './topology';
 
 type ConsumedExtensions =
+  | TopologyComponentFactory
   | Topology3ComponentFactory
   | Topology3ModelProvider
   | Topology3ModelTransform
@@ -62,13 +64,13 @@ const plugin: Plugin<ConsumedExtensions> = [
         import('../components/topology3/test/test-model-provider').then((m) => m.useTestProvider),
     },
   },
-  // {
-  //   type: 'Topology3/ComponentFactory',
-  //   properties: {
-  //     factory: () =>
-  //       import('../components/topology3/test/test-component-factory').then((m) => m.testFactory),
-  //   },
-  // },
+  {
+    type: 'Topology3/ComponentFactory',
+    properties: {
+      factory: () =>
+        import('../components/topology3/test/test-component-factory').then((m) => m.testFactory),
+    },
+  },
 
   {
     type: 'Topology/ComponentFactory',
@@ -82,8 +84,9 @@ const plugin: Plugin<ConsumedExtensions> = [
     properties: {
       name: 'Test Connector',
       fallback: false,
-      provides: import('../components/topology3/test/test-relationship').then((m) => m.provider),
-      create: import('../components/topology3/test/test-relationship').then((m) => m.create),
+      provides: () =>
+        import('../components/topology3/test/test-relationship').then((m) => m.provider),
+      create: () => import('../components/topology3/test/test-relationship').then((m) => m.create),
     },
   },
 ];

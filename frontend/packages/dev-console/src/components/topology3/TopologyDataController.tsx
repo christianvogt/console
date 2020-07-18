@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useExtensions } from '@console/plugin-sdk';
-import { Model } from '@console/topology';
+import { Model } from '@patternfly/react-topology';
 import {
   CodeRef,
   isTopology3ModelProvider,

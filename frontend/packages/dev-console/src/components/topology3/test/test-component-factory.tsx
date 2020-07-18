@@ -7,12 +7,12 @@ import {
   WithCreateConnectorProps,
   Graph,
   ConnectorChoice,
-} from '@console/topology';
+} from '@patternfly/react-topology';
+import { useExtensions } from '@console/plugin-sdk';
 import {
   isTopology3RelationshipProvider,
   Topology3RelationshipProvider,
-} from 'packages/dev-console/src/extensions/topology3';
-import { useExtensions } from '@console/plugin-sdk';
+} from '../../../extensions/topology3';
 
 type TestNodeProps = {
   element: Node;

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { EdgeModel } from '@console/topology';
+import { EdgeModel } from '@patternfly/react-topology';
 import { TYPE_CONNECTS_TO } from '../../topology/components';
 import { ConnectsToData } from '../../topology/topology-types';
 import { ModelTransform } from '../../../extensions/topology3';

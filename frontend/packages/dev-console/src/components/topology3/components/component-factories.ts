@@ -1,4 +1,4 @@
-import { ComponentFactory } from '@console/topology';
+import { ComponentFactory } from '@patternfly/react-topology';
 import { TYPE_WORKLOAD } from '../../topology/components';
 import WorkloadNode from './WorkloadNode';
 

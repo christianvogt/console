@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Node } from '@console/topology';
+import { Node } from '@patternfly/react-topology';
 import NodeLabel from './NodeLabel';
 
 import './WorkloadNode.scss';

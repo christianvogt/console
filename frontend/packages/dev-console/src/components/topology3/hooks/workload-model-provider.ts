@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ModelProvider } from 'packages/dev-console/src/extensions/topology3';
-import { Model } from '@console/topology';
+import { Model } from '@patternfly/react-topology';
 import { useK8sWatchResources } from '@console/internal/components/utils/k8s-watch-hook';
 import {
   createTopologyNodeData,

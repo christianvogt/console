@@ -1,4 +1,5 @@
 import { RelationshipProvider, RelationshipCreator } from '../../../extensions/topology3';
+import { mergeEdge } from '../pf-topology-utils';
 
 export const provider: RelationshipProvider = (source, target) => {
   return source.getId() === 'test-1' && (!target || target.getId() === 'test-2');
@@ -7,7 +8,7 @@ export const provider: RelationshipProvider = (source, target) => {
 export const create: RelationshipCreator = (source, target) => {
   const result = new Promise<boolean>((resolve) => {
     setTimeout(() => {
-      source.getController().mergeEdgeModel({
+      mergeEdge(source.getController(), {
         id: 'test-edge-1',
         type: 'test-edge',
         label: 'Test Edge',

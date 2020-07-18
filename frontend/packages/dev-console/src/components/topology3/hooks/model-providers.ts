@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ModelProvider } from '../../../extensions/topology3';
-import { Model } from '@console/topology';
+import { Model } from '@patternfly/react-topology';
 import { useK8sWatchResources } from '@console/internal/components/utils/k8s-watch-hook';
 import { getBaseTopologyDataModel } from '../../topology/data-transforms';
 
@@ -102,6 +102,18 @@ export const useWorkloadModelProvider: ModelProvider = (namespace: string) => {
       statefulSets: {
         isList: true,
         kind: 'StatefulSet',
+        namespace,
+        optional: true,
+      },
+      jobs: {
+        isList: true,
+        kind: 'Job',
+        namespace,
+        optional: true,
+      },
+      cronJobs: {
+        isList: true,
+        kind: 'CronJob',
         namespace,
         optional: true,
       },

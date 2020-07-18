@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ModelTransform } from '../../../extensions/topology3';
-import { NodeModel } from '@console/topology';
+import { NodeModel } from '@patternfly/react-topology';
 import {
   TYPE_APPLICATION_GROUP,
   GROUP_WIDTH,

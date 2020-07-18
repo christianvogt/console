@@ -1,5 +1,5 @@
 import { Extension } from '@console/plugin-sdk/src/typings/base';
-import { ComponentFactory, Model, GraphElement } from '@console/topology';
+import { ComponentFactory, Model, GraphElement } from '@patternfly/react-topology';
 
 export type CodeRef<T> = () => Promise<T>;
 

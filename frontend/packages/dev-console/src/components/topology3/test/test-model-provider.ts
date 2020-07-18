@@ -1,5 +1,5 @@
+import { Model } from '@patternfly/react-topology';
 import { ModelProvider } from '../../../extensions/topology3';
-import { Model } from '@console/topology';
 
 const model: Model = {
   nodes: [
@@ -21,5 +21,5 @@ const model: Model = {
 };
 
 export const useTestProvider: ModelProvider = () => {
-  return [model, true];
+  return [model, true, undefined];
 };
