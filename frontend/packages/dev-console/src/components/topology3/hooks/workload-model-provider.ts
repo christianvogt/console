@@ -24,6 +24,7 @@ const createModel = (resources: TopologyDataResources): Model => {
       createOverviewItemsForType(key, resources).forEach((item) => {
         const { obj: deploymentConfig } = item;
         const data = createTopologyNodeData(
+          deploymentConfig,
           item,
           TYPE_WORKLOAD,
           getImageForIconClass(`icon-openshift`),

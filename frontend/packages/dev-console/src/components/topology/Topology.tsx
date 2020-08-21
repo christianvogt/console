@@ -50,22 +50,20 @@ const Topology: React.FC<TopologyProps> = ({ visualization, application, selecte
   }, [componentFactoriesPromises]);
 
   React.useEffect(() => {
-    if (componentFactoriesPromises.length && !componentFactories.length) {
-      return;
+    if (visualization && componentFactoriesPromises.length && !componentFactories.length) {
+      visualization.registerComponentFactory(componentFactory);
+      componentFactories.forEach((factory) => {
+        visualization.registerComponentFactory(factory);
+      });
+
+      visualization.addEventListener<ShowGroupingHintEventListener>(
+        SHOW_GROUPING_HINT_EVENT,
+        (element, hint) => {
+          setDragHint(hint);
+        },
+      );
+      setVisualizationReady(true);
     }
-
-    visualization.registerComponentFactory(componentFactory);
-    componentFactories.forEach((factory) => {
-      visualization.registerComponentFactory(factory);
-    });
-
-    visualization.addEventListener<ShowGroupingHintEventListener>(
-      SHOW_GROUPING_HINT_EVENT,
-      (element, hint) => {
-        setDragHint(hint);
-      },
-    );
-    setVisualizationReady(true);
   }, [visualization, componentFactoriesPromises, componentFactories]);
 
   React.useEffect(() => {
