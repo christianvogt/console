@@ -18,6 +18,7 @@ import {
   GreenCheckCircleIcon,
   Modal,
   useUserSettingsCompatibility,
+  usePromise,
 } from '@console/shared';
 import { history } from '@console/internal/components/utils/router';
 import { TileViewPage } from '@console/internal/components/utils/tile-view-page';
@@ -332,6 +333,8 @@ export const OperatorHubTileView: React.FC<OperatorHubTileViewProps> = (props) =
     boolean
   >(userSettingsKey, storeKey, false);
 
+  const ignoreOperatorWarningPromiseRef = usePromise(loaded, ignoreOperatorWarning);
+
   const filteredItems = filterByArchAndOS(props.items);
 
   React.useEffect(() => {
@@ -353,8 +356,9 @@ export const OperatorHubTileView: React.FC<OperatorHubTileViewProps> = (props) =
     }
   };
 
-  const openOverlay = (item: OperatorHubItem) => {
-    if (!ignoreOperatorWarning && item.providerType === COMMUNITY_PROVIDER_TYPE) {
+  const openOverlay = async (item: OperatorHubItem) => {
+    const ignoreOperatorWarningRef = await ignoreOperatorWarningPromiseRef.current;
+    if (!ignoreOperatorWarningRef.current && item.providerType === COMMUNITY_PROVIDER_TYPE) {
       communityOperatorWarningModal({
         showCommunityOperators: (ignore) => showCommunityOperator(item)(ignore),
       });
