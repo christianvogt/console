@@ -1,0 +1,14 @@
+{
+  "name": "@console/dashboard",
+  "version": "0.0.0-fixed",
+  "description": "OpenShift Dashboard",
+  "private": true,
+  "scripts": {
+    "coverage": "yarn test --coverage --collectCoverageFrom='[\"packages/dashboard/src/**\",\"!**/__tests__/**\",\"!packages/dashboard/src/test/**\"]'",
+    "lint": "yarn --cwd ../.. eslint packages/dashboard",
+    "test": "yarn --cwd ../.. test packages/dashboard"
+  },
+  "dependencies": {
+    "react-grid-layout": "^1.2.0"
+  }
+}

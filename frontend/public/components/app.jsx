@@ -233,6 +233,17 @@ const AppRouter = () => {
   return (
     <Router history={history} basename={window.SERVER_FLAGS.basePath}>
       <Switch>
+        <Route
+          path="/dashboard"
+          render={(componentProps) => (
+            <AsyncComponent
+              loader={() =>
+                import('../../packages/dashboard/src/dev/DashboardPage').then((m) => m.default)
+              }
+              {...componentProps}
+            />
+          )}
+        />
         {standaloneRouteExtensions.map((e) => (
           <Route
             key={e.uid}

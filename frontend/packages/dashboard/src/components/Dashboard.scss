@@ -1,0 +1,26 @@
+@import '~react-grid-layout/css/styles.css';
+@import '~react-resizable/css/styles.css';
+
+.ocdb-dashboard {
+  flex: 1 1 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  & > .pf-c-tabs {
+    flex-shrink: 0;
+  }
+
+  & > .pf-c-tab-content {
+    flex: 1 1 0;
+    background-color: rgb(240, 240, 240);
+    overflow: hidden;
+  }
+}
+
+.ocdb-grid-item {
+  & .co-dashboard-card {
+    height: 100%;
+    overflow: hidden;
+  }
+}

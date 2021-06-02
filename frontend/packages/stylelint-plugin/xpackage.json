@@ -1,0 +1,19 @@
+{
+  "name": "@console/stylelint-plugin",
+  "version": "0.0.0-fixed",
+  "description": "Console stylelint rules and configs.",
+  "main": "index.js",
+  "dependencies": {
+    "merge": "^1.2.1",
+    "stylelint-config-prettier": "^8.0.1",
+    "stylelint-order": "^4.0.0",
+    "stylelint-prettier": "^1.1.2",
+    "stylelint-scss": "^3.17.2"
+  },
+  "devDependencies": {
+    "stylelint": "^13.3.3"
+  },
+  "peerDependencies": {
+    "stylelint": ">=13.0.0"
+  }
+}
