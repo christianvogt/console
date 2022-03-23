@@ -1,0 +1,17 @@
+.pf-dashboard-card-frame {
+  // compensate for those who nest PF cards
+  > .pf-c-card {
+    box-shadow: none;
+    background: none;
+    overflow: hidden;
+
+    > .pf-c-card__body {
+      min-height: 100%;
+    }
+
+    > .pf-c-card__body,
+    > .pf-c-card__header + * {
+      overflow: auto;
+    }
+  }
+}

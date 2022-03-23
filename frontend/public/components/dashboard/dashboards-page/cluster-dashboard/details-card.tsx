@@ -226,7 +226,7 @@ export const DetailsCard = withDashboardResources(
 );
 
 type DetailsCardProps = DashboardItemProps & {
-  openshiftFlag: boolean;
+  // openshiftFlag: boolean;
 };
 
 type ClusterVersionProps = {

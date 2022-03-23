@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Base64 Tool</title>
+  <style>
+    #output {
+      cursor: pointer;
+      max-width: 100%;
+      word-wrap: break-word;
+      max-height: 500px;
+      overflow: scroll;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Upload an image and get back a base64 string</h1>
+
+<input type="file" onchange="encodeImageFileAsURL(this)" />
+
+<div id="output"></div>
+
+<script type="text/javascript">
+  const domOutput = document.getElementById('output');
+
+  domOutput.onclick = () => {
+    selectText(domOutput)
+  };
+
+  function selectText(element) {
+    let range;
+    if (document.selection) { // IE
+      range = document.body.createTextRange();
+      range.moveToElementText(element);
+      range.select();
+    } else if (window.getSelection) {
+      range = document.createRange();
+      range.selectNode(element);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+    }
+  }
+
+  function encodeImageFileAsURL(element) {
+    const file = element.files[0];
+    const reader = new FileReader();
+    reader.onloadend = function() {
+      domOutput.innerText = reader.result;
+    }
+    reader.readAsDataURL(file);
+  }
+</script>
+
+</body>
+</html>

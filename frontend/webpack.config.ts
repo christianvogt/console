@@ -135,7 +135,12 @@ const config: Configuration = {
         loader: 'umd-compat-loader',
       },
       {
-        test: /\.s?css$/,
+        test: /\.css$/,
+        // include: path.resolve(__dirname, './node_modules/monaco-editor'),
+        use: ['style-loader', 'css-loader'],
+      },
+      {
+        test: /\.scss$/,
         exclude: /node_modules\/(?!(@patternfly)\/).*/,
         use: [
           {
@@ -169,11 +174,6 @@ const config: Configuration = {
             },
           },
         ],
-      },
-      {
-        test: /\.css$/,
-        include: path.resolve(__dirname, './node_modules/monaco-editor'),
-        use: ['style-loader', 'css-loader'],
       },
       {
         test: /\.(png|jpg|jpeg|gif|svg|woff2?|ttf|eot|otf)(\?.*$|$)/,

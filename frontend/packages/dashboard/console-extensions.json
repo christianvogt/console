@@ -1,0 +1,129 @@
+[
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": false,
+      "path": "/test-dashboard",
+      "component": { "$codeRef": "DashboardPage" }
+    }
+  },
+  {
+    "type": "console.navigation/href",
+    "properties": {
+      "id": "test-dashboard",
+      "name": "Test Dashboard",
+      "href": "/test-dashboard/dashboard",
+      "perspective": "admin",
+      "section": "home"
+    }
+  },
+  {
+    "type": "console.navigation/href",
+    "properties": {
+      "id": "test-dashboard-catalog",
+      "name": "Test Dashboard Catalog",
+      "href": "/test-dashboard/catalog",
+      "perspective": "admin",
+      "section": "home"
+    }
+  },
+
+  {
+    "type": "dashboard/card",
+    "properties": {
+      "dashboard": "cluster",
+      "id": "activity-card",
+      "label": "Activity Card",
+      "description": "Displays the activity card.",
+      "icon": {
+        "$codeRef": "activity-card.Icon"
+      },
+      "contentComponent": {
+        "$codeRef": "activity-card.Card"
+      }
+    }
+  },
+
+  {
+    "type": "dashboard/card",
+    "properties": {
+      "dashboard": "cluster",
+      "id": "details-card",
+      "label": "Details Card",
+      "description": "Displays the details card.",
+      "icon": {
+        "$codeRef": "details-card.Icon"
+      },
+      "contentComponent": {
+        "$codeRef": "details-card.Card"
+      }
+    }
+  },
+
+  {
+    "type": "dashboard/card",
+    "properties": {
+      "dashboard": "cluster",
+      "id": "inventory-card",
+      "label": "Inventory Card",
+      "description": "Displays the inventory card.",
+      "icon": {
+        "$codeRef": "inventory-card.Icon"
+      },
+      "contentComponent": {
+        "$codeRef": "inventory-card.Card"
+      }
+    }
+  },
+
+  {
+    "type": "dashboard/card",
+    "properties": {
+      "dashboard": "cluster",
+      "id": "status-card",
+      "label": "Status Card",
+      "description": "Displays the status card.",
+      "icon": {
+        "$codeRef": "status-card.Icon"
+      },
+      "contentComponent": {
+        "$codeRef": "status-card.Card"
+      }
+    }
+  },
+
+  {
+    "type": "dashboard/card",
+    "properties": {
+      "dashboard": "cluster",
+      "id": "utilization-card",
+      "label": "Utilization Card",
+      "description": "Displays the utilization card.",
+      "icon": {
+        "$codeRef": "utilization-card.Icon"
+      },
+      "contentComponent": {
+        "$codeRef": "utilization-card.Card"
+      }
+    }
+  },
+
+  {
+    "type": "dashboard/card",
+    "properties": {
+      "dashboard": "pipeline",
+      "id": "dev-pipeline",
+      "label": "Pipeline Metrics",
+      "description": "Pipeline metrics",
+      "icon": {
+        "$codeRef": "pipeline-card.Icon"
+      },
+      "contentComponent": {
+        "$codeRef": "pipeline-card.Card"
+      },
+      "settingsComponent": {
+        "$codeRef": "pipeline-card.Settings"
+      }
+    }
+  }
+]

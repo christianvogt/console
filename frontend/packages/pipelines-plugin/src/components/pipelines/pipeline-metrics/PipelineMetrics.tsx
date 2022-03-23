@@ -2,16 +2,17 @@ import * as React from 'react';
 import {
   Flex,
   FlexItem,
-  Grid,
-  GridItem,
+  // Grid,
+  // GridItem,
   Stack,
   StackItem,
-  Card,
-  CardBody,
-  CardHeader,
-  CardTitle,
+  // Card,
+  // CardBody,
+  // CardHeader,
+  // CardTitle,
 } from '@patternfly/react-core';
 import { useTranslation } from 'react-i18next';
+import PipelineDashboard from '@console/dashboard/src/components/PipelineDashboard';
 import { parsePrometheusDuration } from '@console/internal/components/utils/datetime';
 import { PipelineDetailsTabProps } from '../detail-page-tabs/types';
 import { useLatestPipelineRun } from '../hooks';
@@ -19,10 +20,10 @@ import { GraphData } from './pipeline-metrics-utils';
 import PipelineMetricsEmptyState from './PipelineMetricsEmptyState';
 import PipelineMetricsRefreshDropdown from './PipelineMetricsRefreshDropdown';
 import PipelineMetricsTimeRangeDropdown from './PipelineMetricsTimeRangeDropdown';
-import PipelineRunCount from './PipelineRunCount';
-import PipelineRunDurationGraph from './PipelineRunDurationGraph';
-import PipelineRunTaskRunGraph from './PipelineRunTaskRunGraph';
-import PipelineSuccessRatioDonut from './PipelineSuccessRatioDonut';
+// import PipelineRunCount from './PipelineRunCount';
+// import PipelineRunDurationGraph from './PipelineRunDurationGraph';
+// import PipelineRunTaskRunGraph from './PipelineRunTaskRunGraph';
+// import PipelineSuccessRatioDonut from './PipelineSuccessRatioDonut';
 
 import './PipelineMetrics.scss';
 
@@ -65,8 +66,14 @@ const PipelineMetrics: React.FC<PipelineDetailsTabProps> = ({ obj, customData })
           </FlexItem>
         </Flex>
       </StackItem>
-      <StackItem isFilled className="co-m-pane__body pipeline-metrics-dashboard__body">
-        <Grid
+      <StackItem isFilled className="pipeline-metrics-dashboard__body">
+        <PipelineDashboard
+          interval={interval}
+          timespan={timespan}
+          pipeline={obj}
+          queryPrefix={queryPrefix}
+        />
+        {/* <Grid
           sm={1}
           md={1}
           lg={1}
@@ -144,7 +151,7 @@ const PipelineMetrics: React.FC<PipelineDetailsTabProps> = ({ obj, customData })
               </CardBody>
             </Card>
           </GridItem>
-        </Grid>
+        </Grid> */}
       </StackItem>
     </Stack>
   );

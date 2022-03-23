@@ -25,6 +25,9 @@ export BRIDGE_K8S_MODE_OFF_CLUSTER_ENDPOINT
 BRIDGE_K8S_MODE_OFF_CLUSTER_SKIP_VERIFY_TLS=true
 export BRIDGE_K8S_MODE_OFF_CLUSTER_SKIP_VERIFY_TLS
 
+#BRIDGE_K8S_MODE_OFF_CLUSTER_THANOS=https://thanos-querier-openshift-monitoring.apps.jephilli-4-11-03-21-0639.devcluster.openshift.com
+#BRIDGE_K8S_MODE_OFF_CLUSTER_ALERTMANAGER=https://alertmanager-main-openshift-monitoring.apps.jephilli-4-11-03-21-0639.devcluster.openshift.com
+
 BRIDGE_K8S_MODE_OFF_CLUSTER_THANOS=$(oc -n openshift-config-managed get configmap monitoring-shared-config -o jsonpath='{.data.thanosPublicURL}')
 export BRIDGE_K8S_MODE_OFF_CLUSTER_THANOS
 

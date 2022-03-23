@@ -10,6 +10,7 @@
   "dependencies": {
     "@console/ceph-storage-plugin": "0.0.0-fixed",
     "@console/container-security": "0.0.0-fixed",
+    "@console/dashboard": "0.0.0-fixed",
     "@console/dev-console": "0.0.0-fixed",
     "@console/gitops-plugin": "0.0.0-fixed",
     "@console/helm-plugin": "0.0.0-fixed",
